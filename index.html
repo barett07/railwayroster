@@ -765,7 +765,7 @@ window.initBuiltinShifts = async function() {
     }));
     for (let i=0; i<rows.length; i+=100) {
       await sbFetch('/rest/v1/shifts', {
-        method: 'POST', headers: { 'Prefer': 'return=minimal' },
+        method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
         body: JSON.stringify(rows.slice(i, i+100))
       });
     }
@@ -830,12 +830,19 @@ window.doImportShifts = async function() {
   if (!_parsedShiftXLSX?.length) { toast('請先選擇檔案', 'err'); return; }
   if (!confirm(`確認匯入 ${_parsedShiftXLSX.length} 個工作班？`)) return;
   try {
+    // Deduplicate by id (Excel may have repeated rows)
+    const seen = new Set();
+    const rows = _parsedShiftXLSX.filter(s => { if (seen.has(s.id)) return false; seen.add(s.id); return true; });
     await sbFetch('/rest/v1/shifts?id=not.is.null', { method:'DELETE', headers:{'Prefer':'return=minimal'} });
-    for (let i=0; i<_parsedShiftXLSX.length; i+=100) {
-      await sbFetch('/rest/v1/shifts', { method:'POST', headers:{'Prefer':'return=minimal'}, body:JSON.stringify(_parsedShiftXLSX.slice(i,i+100)) });
+    for (let i=0; i<rows.length; i+=100) {
+      await sbFetch('/rest/v1/shifts', {
+        method:'POST',
+        headers:{'Prefer':'resolution=merge-duplicates,return=minimal'},
+        body:JSON.stringify(rows.slice(i,i+100))
+      });
     }
     await loadShifts(); renderShifts(); closeM();
-    toast(`✅ 已匯入 ${_parsedShiftXLSX.length} 個工作班`, 'ok');
+    toast(`✅ 已匯入 ${rows.length} 個工作班`, 'ok');
     _parsedShiftXLSX = null;
   } catch(e) { toast('匯入失敗：'+e.message, 'err'); }
 };
