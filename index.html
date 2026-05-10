@@ -263,7 +263,6 @@ body{background:var(--bg);color:var(--tx);font-family:'Noto Sans TC',sans-serif;
           <div class="sec-sub" id="shiftsCount">共 0 班</div>
         </div>
         <div style="display:flex;gap:7px;flex-wrap:wrap">
-          <button class="btn btn-secondary" onclick="initBuiltinShifts()">🔄 載入預設工作班</button>
           <button class="btn btn-secondary" onclick="openImportShiftXLSX()">📥 匯入 Excel</button>
         </div>
       </div>
@@ -294,9 +293,6 @@ const SUPABASE_URL      = 'https://pgvrnhzbxgwcqbzeanai.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBndnJuaHpieGd3Y3FiemVhbmFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzOTg3NDYsImV4cCI6MjA5Mzk3NDc0Nn0.hcIlr_ZIaDjd1YRWJv8rM3wu6-Ix16pPyBVgVHeE4xc';
 const IMAGE_BASE        = 'https://barett07.github.io/railwayshift/images/';
 const ADMIN_MODE        = new URLSearchParams(window.location.search).get('admin') === '651692';
-
-// ── BUILTIN SHIFTS ──────────────────────────────
-const BUILTIN = [{"id":"501","name":"501","startTime":"07:27","endTime":"20:01","depTrain":"108(3000)","depTime":"08:17","arrTrain":"139","arrTime":"19:31","specialNote":"","isOvernight":false},{"id":"502","name":"502","startTime":"06:44","endTime":"19:15","depTrain":"280(3000)","depTime":"07:34","arrTrain":"273","arrTime":"18:35","specialNote":"","isOvernight":false},{"id":"503","name":"503","startTime":"08:21","endTime":"21:04","depTrain":"112","depTime":"09:11","arrTrain":"177","arrTime":"20:34","specialNote":"","isOvernight":false},{"id":"504","name":"504","startTime":"12:06","endTime":"00:24","depTrain":"ㄅ120","depTime":"12:46","arrTrain":"155","arrTime":"23:34","specialNote":"","isOvernight":true},{"id":"505","name":"505","startTime":"13:39","endTime":"10:01","depTrain":"122","depTime":"14:29","arrTrain":"ㄅ105","arrTime":"09:41","specialNote":"","isOvernight":true},{"id":"506","name":"506","startTime":"11:39","endTime":"22:29","depTrain":"118","depTime":"12:29","arrTrain":"181","arrTime":"21:59","specialNote":"","isOvernight":false},{"id":"507","name":"507","startTime":"09:39","endTime":"06:44","depTrain":"114","depTime":"10:29","arrTrain":"472(3000)","arrTime":"06:14","specialNote":"","isOvernight":true},{"id":"508","name":"508","startTime":"05:48","endTime":"18:00","depTrain":"278","depTime":"06:48","arrTrain":"135","arrTime":"17:30","specialNote":"","isOvernight":false},{"id":"509","name":"509","startTime":"14:26","endTime":"08:48","depTrain":"130","depTime":"15:56","arrTrain":"161(3000)","arrTime":"08:18","specialNote":"日停","isOvernight":true},{"id":"509AV","name":"509AV","startTime":"15:17","endTime":"08:48","depTrain":"126","depTime":"16:07","arrTrain":"161(3000)","arrTime":"08:18","specialNote":"日駛","isOvernight":true},{"id":"510","name":"510","startTime":"14:03","endTime":"11:42","depTrain":"282","depTime":"15:42","arrTrain":"109","arrTime":"10:52","specialNote":"","isOvernight":true},{"id":"511","name":"511","startTime":"06:18","endTime":"19:01","depTrain":"170","depTime":"07:08","arrTrain":"175","arrTime":"18:31","specialNote":"","isOvernight":false},{"id":"512","name":"512","startTime":"16:11","endTime":"11:04","depTrain":"134","depTime":"17:01","arrTrain":"ㄅ2143","arrTime":"10:44","specialNote":"","isOvernight":true},{"id":"513","name":"513","startTime":"15:00","endTime":"09:22","depTrain":"128","depTime":"15:50","arrTrain":"1","arrTime":"08:52","specialNote":"","isOvernight":true},{"id":"514","name":"514","startTime":"15:44","endTime":"10:11","depTrain":"ㄅ2226","depTime":"16:24","arrTrain":"105","arrTime":"09:41","specialNote":"","isOvernight":true},{"id":"515","name":"515","startTime":"11:56","endTime":"00:07","depTrain":"120(3000)","depTime":"12:46","arrTrain":"285","arrTime":"23:27","specialNote":"","isOvernight":true},{"id":"516","name":"516","startTime":"10:39","endTime":"22:00","depTrain":"116","depTime":"11:29","arrTrain":"149","arrTime":"21:30","specialNote":"","isOvernight":false},{"id":"517","name":"517","startTime":"12:39","endTime":"08:02","depTrain":"172","depTime":"13:29","arrTrain":"280(3000)","arrTime":"07:32","specialNote":"","isOvernight":true},{"id":"518","name":"518","startTime":"18:10","endTime":"12:04","depTrain":"288","depTime":"19:10","arrTrain":"115","arrTime":"11:34","specialNote":"","isOvernight":true},{"id":"519","name":"519","startTime":"07:56","endTime":"20:32","depTrain":"110(3000)","depTime":"08:46","arrTrain":"143(3000)","arrTime":"20:02","specialNote":"","isOvernight":false},{"id":"520","name":"520","startTime":"09:25","endTime":"22:19","depTrain":"1006(900)","depTime":"10:15","arrTrain":"ㄅ181","arrTime":"21:59","specialNote":"","isOvernight":false},{"id":"521","name":"521","startTime":"08:04","endTime":"19:23","depTrain":"1","depTime":"08:54","arrTrain":"2","arrTime":"18:53","specialNote":"","isOvernight":false},{"id":"522","name":"522","startTime":"13:32","endTime":"08:45","depTrain":"ㄅ2204","depTime":"14:12","arrTrain":"108(3000)","arrTime":"08:15","specialNote":"","isOvernight":true},{"id":"523","name":"523","startTime":"05:04","endTime":"18:19","depTrain":"101","depTime":"05:54","arrTrain":"ㄅ385","arrTime":"17:59","specialNote":"","isOvernight":false},{"id":"524","name":"524","startTime":"08:53","endTime":"21:14","depTrain":"105","depTime":"09:43","arrTrain":"150","arrTime":"20:44","specialNote":"","isOvernight":false},{"id":"525","name":"525","startTime":"10:08","endTime":"20:22","depTrain":"113","depTime":"10:58","arrTrain":"3028(900)","arrTime":"19:52","specialNote":"","isOvernight":false},{"id":"526","name":"526","startTime":"11:16","endTime":"23:25","depTrain":"131(3000)","depTime":"12:06","arrTrain":"ㄅ2267","arrTime":"23:05","specialNote":"","isOvernight":false},{"id":"527","name":"527","startTime":"15:44","endTime":"11:04","depTrain":"ㄅ2226","depTime":"16:24","arrTrain":"ㄅ2143","arrTime":"10:44","specialNote":"","isOvernight":true},{"id":"528","name":"528","startTime":"10:46","endTime":"07:35","depTrain":"115","depTime":"11:36","arrTrain":"170","arrTime":"07:05","specialNote":"","isOvernight":true},{"id":"529","name":"529","startTime":"08:16","endTime":"20:31","depTrain":"ㄅ3118","depTime":"08:56","arrTrain":"168(3000)","arrTime":"20:01","specialNote":"","isOvernight":false},{"id":"530","name":"530","startTime":"07:30","endTime":"19:53","depTrain":"161(3000)","depTime":"08:20","arrTrain":"144","arrTime":"19:23","specialNote":"","isOvernight":false},{"id":"531","name":"531","startTime":"06:17","endTime":"15:20","depTrain":"2514","depTime":"07:17","arrTrain":"2183","arrTime":"14:50","specialNote":"","isOvernight":false},{"id":"532","name":"532","startTime":"19:51","endTime":"11:14","depTrain":"2558","depTime":"20:41","arrTrain":"2143","arrTime":"10:44","specialNote":"","isOvernight":true},{"id":"533","name":"533","startTime":"04:00","endTime":"15:03","depTrain":"2114","depTime":"05:00","arrTrain":"2527","arrTime":"14:23","specialNote":"","isOvernight":false},{"id":"534","name":"534","startTime":"04:48","endTime":"13:14","depTrain":"2008(900)","depTime":"05:58","arrTrain":"511","arrTime":"12:44","specialNote":"","isOvernight":false},{"id":"535","name":"535","startTime":"21:04","endTime":"12:54","depTrain":"2562","depTime":"22:04","arrTrain":"2521","arrTime":"12:14","specialNote":"","isOvernight":true},{"id":"536","name":"536","startTime":"06:12","endTime":"15:51","depTrain":"2134","depTime":"07:02","arrTrain":"2531","arrTime":"15:11","specialNote":"","isOvernight":false},{"id":"537","name":"537","startTime":"08:29","endTime":"06:08","depTrain":"2154","depTime":"09:19","arrTrain":"102","arrTime":"05:38","specialNote":"","isOvernight":true},{"id":"538","name":"538","startTime":"07:19","endTime":"00:04","depTrain":"2518","depTime":"08:09","arrTrain":"2294","arrTime":"23:24","specialNote":"","isOvernight":true},{"id":"539","name":"539","startTime":"10:25","endTime":"20:54","depTrain":"2174","depTime":"11:15","arrTrain":"ㄅ177","arrTime":"20:34","specialNote":"","isOvernight":false},{"id":"540","name":"540","startTime":"19:23","endTime":"13:51","depTrain":"2264","depTime":"20:13","arrTrain":"ㄅ121","arrTime":"13:31","specialNote":"","isOvernight":true},{"id":"541","name":"541","startTime":"13:53","endTime":"09:47","depTrain":"2013","depTime":"14:43","arrTrain":"2154","arrTime":"09:17","specialNote":"","isOvernight":true},{"id":"542","name":"542","startTime":"17:56","endTime":"08:10","depTrain":"2554","depTime":"18:56","arrTrain":"2507","arrTime":"07:30","specialNote":"","isOvernight":true},{"id":"543","name":"543","startTime":"05:38","endTime":"10:48","depTrain":"2600A","depTime":"06:38","arrTrain":"2609B","arrTime":"10:08","specialNote":"","isOvernight":false},{"id":"544","name":"544","startTime":"15:16","endTime":"00:37","depTrain":"2544","depTime":"16:16","arrTrain":"2273","arrTime":"23:57","specialNote":"","isOvernight":true},{"id":"545","name":"545","startTime":"13:15","endTime":"22:56","depTrain":"516","depTime":"14:05","arrTrain":"2553","arrTime":"22:16","specialNote":"","isOvernight":false},{"id":"546","name":"546","startTime":"13:22","endTime":"00:48","depTrain":"2204","depTime":"14:12","arrTrain":"2561","arrTime":"00:08","specialNote":"","isOvernight":true},{"id":"547","name":"547","startTime":"03:25","endTime":"06:22","depTrain":"101A","depTime":"04:55","arrTrain":"101","arrTime":"05:52","specialNote":"","isOvernight":false},{"id":"548","name":"548","startTime":"15:00","endTime":"07:23","depTrain":"2042A(900)","depTime":"16:10","arrTrain":"2503","arrTime":"06:53","specialNote":"","isOvernight":true},{"id":"549","name":"549","startTime":"11:58","endTime":"22:22","depTrain":"2534","depTime":"12:58","arrTrain":"2551","arrTime":"21:42","specialNote":"","isOvernight":false},{"id":"550","name":"550","startTime":"09:23","endTime":"20:16","depTrain":"2524","depTime":"10:23","arrTrain":"2233","arrTime":"19:46","specialNote":"","isOvernight":false},{"id":"551","name":"551","startTime":"20:04","endTime":"00:28","depTrain":"3238","depTime":"20:54","arrTrain":"2267B","arrTime":"23:48","specialNote":"","isOvernight":true},{"id":"552","name":"552","startTime":"21:07","endTime":"12:22","depTrain":"3248","depTime":"21:57","arrTrain":"2153","arrTime":"11:52","specialNote":"","isOvernight":true},{"id":"553","name":"553","startTime":"14:19","endTime":"23:59","depTrain":"2542","depTime":"15:19","arrTrain":"2557","arrTime":"23:19","specialNote":"","isOvernight":false},{"id":"554","name":"554","startTime":"17:22","endTime":"07:56","depTrain":"2244","depTime":"18:12","arrTrain":"3157","arrTime":"07:26","specialNote":"","isOvernight":true},{"id":"555","name":"555","startTime":"09:34","endTime":"07:35","depTrain":"2166","depTime":"10:34","arrTrain":"2103","arrTime":"07:05","specialNote":"","isOvernight":true},{"id":"556","name":"556","startTime":"18:57","endTime":"11:08","depTrain":"2046(900)","depTime":"20:07","arrTrain":"2513","arrTime":"10:28","specialNote":"","isOvernight":true},{"id":"557","name":"557","startTime":"11:25","endTime":"22:18","depTrain":"2184","depTime":"12:15","arrTrain":"2253","arrTime":"21:48","specialNote":"","isOvernight":false},{"id":"558","name":"558","startTime":"15:13","endTime":"23:31","depTrain":"2224","depTime":"16:03","arrTrain":"653","arrTime":"22:51","specialNote":"","isOvernight":false},{"id":"559","name":"559","startTime":"12:30","endTime":"09:03","depTrain":"ㄅ2194","depTime":"13:10","arrTrain":"2005(900)","arrTime":"08:13","specialNote":"","isOvernight":true},{"id":"560","name":"560","startTime":"10:58","endTime":"21:19","depTrain":"2532","depTime":"11:58","arrTrain":"2033(900)","arrTime":"20:29","specialNote":"","isOvernight":false},{"id":"561","name":"561","startTime":"15:24","endTime":"09:16","depTrain":"2226","depTime":"16:24","arrTrain":"2511","arrTime":"08:36","specialNote":"","isOvernight":true},{"id":"562","name":"562","startTime":"14:36","endTime":"06:52","depTrain":"3010(900)","depTime":"15:26","arrTrain":"2124","arrTime":"06:22","specialNote":"","isOvernight":true},{"id":"563","name":"563","startTime":"12:03","endTime":"00:28","depTrain":"2190","depTime":"13:03","arrTrain":"ㄅ2561","arrTime":"00:08","specialNote":"","isOvernight":true},{"id":"564","name":"564","startTime":"17:11","endTime":"10:48","depTrain":"ㄅ2552","depTime":"17:51","arrTrain":"ㄅ2513","arrTime":"10:28","specialNote":"","isOvernight":true},{"id":"565","name":"565","startTime":"07:13","endTime":"16:30","depTrain":"ㄅ2004","depTime":"07:53","arrTrain":"3029(900)","arrTime":"16:00","specialNote":"","isOvernight":false},{"id":"566","name":"566","startTime":"14:39","endTime":"08:47","depTrain":"ㄅ2542","depTime":"15:19","arrTrain":"2115","arrTime":"08:07","specialNote":"","isOvernight":true},{"id":"567","name":"567","startTime":"09:54","endTime":"23:16","depTrain":"ㄅ2166","depTime":"10:34","arrTrain":"2263","arrTime":"22:46","specialNote":"","isOvernight":false},{"id":"568","name":"568","startTime":"10:23","endTime":"23:39","depTrain":"ㄅ2528","depTime":"11:03","arrTrain":"ㄅ2557","arrTime":"23:19","specialNote":"","isOvernight":false},{"id":"569","name":"569","startTime":"10:35","endTime":"00:08","depTrain":"ㄅ2174","depTime":"11:15","arrTrain":"2269","arrTime":"23:38","specialNote":"","isOvernight":true},{"id":"570","name":"570","startTime":"10:03","endTime":"08:37","depTrain":"2528","depTime":"11:03","arrTrain":"2518","arrTime":"08:07","specialNote":"","isOvernight":true},{"id":"571","name":"571","startTime":"13:10","endTime":"08:56","depTrain":"ㄅ2538","depTime":"13:50","arrTrain":"ㄅ2511","arrTime":"08:36","specialNote":"","isOvernight":true},{"id":"572","name":"572","startTime":"08:15","endTime":"20:08","depTrain":"2522","depTime":"09:25","arrTrain":"2543","arrTime":"19:28","specialNote":"","isOvernight":false},{"id":"573","name":"573","startTime":"07:14","endTime":"16:48","depTrain":"2144","depTime":"08:04","arrTrain":"2533","arrTime":"16:08","specialNote":"","isOvernight":false},{"id":"574","name":"574","startTime":"14:17","endTime":"10:11","depTrain":"ㄅ372","depTime":"14:57","arrTrain":"2131","arrTime":"09:31","specialNote":"","isOvernight":true},{"id":"575","name":"575","startTime":"22:00","endTime":"12:12","depTrain":"2564","depTime":"23:00","arrTrain":"ㄅ2153","arrTime":"11:52","specialNote":"","isOvernight":true},{"id":"575AV","name":"575AV","startTime":"22:00","endTime":"18:31","depTrain":"2564","depTime":"23:00","arrTrain":"160","arrTime":"18:01","specialNote":"160次日駛","isOvernight":true},{"id":"576","name":"576","startTime":"04:28","endTime":"10:01","depTrain":"2603A","depTime":"05:28","arrTrain":"ㄅ105","arrTime":"09:41","specialNote":"","isOvernight":false},{"id":"577","name":"577","startTime":"18:58","endTime":"22:41","depTrain":"3228","depTime":"19:48","arrTrain":"2257","arrTime":"22:11","specialNote":"一至六駛","isOvernight":false},{"id":"578","name":"578","startTime":"18:16","endTime":"13:04","depTrain":"ㄅ2554","depTime":"18:56","arrTrain":"ㄅ511","arrTime":"12:44","specialNote":"","isOvernight":true},{"id":"579","name":"579","startTime":"17:24","endTime":"09:20","depTrain":"2246","depTime":"18:24","arrTrain":"2004B","arrTime":"08:40","specialNote":"","isOvernight":true},{"id":"580","name":"580","startTime":"09:19","endTime":"00:00","depTrain":"2164","depTime":"10:09","arrTrain":"ㄅ3268","arrTime":"23:40","specialNote":"","isOvernight":true},{"id":"581","name":"581","startTime":"11:38","endTime":"20:35","depTrain":"7201","depTime":"12:48","arrTrain":"7802","arrTime":"19:55","specialNote":"","isOvernight":false},{"id":"581AV","name":"581AV","startTime":"11:18","endTime":"20:35","depTrain":"7201","depTime":"12:48","arrTrain":"7802","arrTime":"19:55","specialNote":"三駛","isOvernight":false},{"id":"582","name":"582","startTime":"03:53","endTime":"13:38","depTrain":"7801","depTime":"05:03","arrTrain":"2194","arrTime":"13:08","specialNote":"","isOvernight":false},{"id":"583","name":"583","startTime":"04:10","endTime":"13:51","depTrain":"7502","depTime":"05:20","arrTrain":"ㄅ121","arrTime":"13:31","specialNote":"","isOvernight":false},{"id":"584","name":"584","startTime":"07:30","endTime":"14:38","depTrain":"7142","depTime":"08:40","arrTrain":"7143","arrTime":"13:58","specialNote":"","isOvernight":false},{"id":"584AV","name":"584AV","startTime":"07:10","endTime":"14:48","depTrain":"7142","depTime":"08:40","arrTrain":"7143","arrTime":"13:58","specialNote":"三駛","isOvernight":false},{"id":"585","name":"585","startTime":"11:49","endTime":"21:32","depTrain":"ㄅ118","depTime":"12:29","arrTrain":"7501","arrTime":"20:52","specialNote":"","isOvernight":false},{"id":"586","name":"586","startTime":"11:33","endTime":"22:47","depTrain":"7102","depTime":"12:43","arrTrain":"7101","arrTime":"22:07","specialNote":"","isOvernight":false},{"id":"587","name":"587","startTime":"07:05","endTime":"19:10","depTrain":"2113","depTime":"07:55","arrTrain":"7202","arrTime":"18:30","specialNote":"","isOvernight":false},{"id":"587AV","name":"587AV","startTime":"07:05","endTime":"19:20","depTrain":"2113","depTime":"07:55","arrTrain":"7202","arrTime":"18:30","specialNote":"三駛","isOvernight":false},{"id":"588","name":"588","startTime":"03:53","endTime":"17:49","depTrain":"7801","depTime":"05:03","arrTrain":"554","arrTime":"17:19","specialNote":"","isOvernight":false},{"id":"589","name":"589","startTime":"10:26","endTime":"19:10","depTrain":"3197","depTime":"11:16","arrTrain":"7202","arrTime":"18:30","specialNote":"","isOvernight":false},{"id":"589AV","name":"589AV","startTime":"10:26","endTime":"19:20","depTrain":"3197","depTime":"11:16","arrTrain":"7202","arrTime":"18:30","specialNote":"三駛","isOvernight":false},{"id":"591","name":"591","startTime":"08:06","endTime":"21:50","depTrain":"ㄅ110","depTime":"08:46","arrTrain":"ㄅ149","arrTime":"21:30","specialNote":"","isOvernight":false},{"id":"598","name":"598","startTime":"07:57","endTime":"15:43","depTrain":"7112","depTime":"09:07","arrTrain":"7113","arrTime":"15:03","specialNote":"","isOvernight":false},{"id":"5R1","name":"5R1","startTime":"06:08","endTime":"17:28","depTrain":"ㄅ278","depTime":"06:48","arrTrain":"127(3000)","arrTime":"16:38","specialNote":"五、日駛","isOvernight":false},{"id":"5R10","name":"5R10","startTime":"10:26","endTime":"17:49","depTrain":"3197","depTime":"11:16","arrTrain":"554","arrTime":"17:19","specialNote":"五六日例駛","isOvernight":false},{"id":"5R11","name":"5R11","startTime":"07:05","endTime":"13:38","depTrain":"2113","depTime":"07:55","arrTrain":"2194","arrTime":"13:08","specialNote":"五六日例駛","isOvernight":false},{"id":"5R2","name":"5R2","startTime":"13:45","endTime":"18:56","depTrain":"2032","depTime":"14:45","arrTrain":"2019","arrTime":"18:26","specialNote":"日駛","isOvernight":false},{"id":"5R8","name":"5R8","startTime":"15:36","endTime":"23:14","depTrain":"1842C","depTime":"16:36","arrTrain":"1831C","arrTime":"22:34","specialNote":"二、四駛","isOvernight":false},{"id":"5R9","name":"5R9","startTime":"12:37","endTime":"22:41","depTrain":"126A","depTime":"14:07","arrTrain":"2257","arrTime":"22:11","specialNote":"日駛","isOvernight":false},{"id":"X21","name":"X21","startTime":"07:30","endTime":"17:00","depTrain":"","depTime":"","arrTrain":"","arrTime":"","specialNote":"","isOvernight":false},{"id":"X22","name":"X22","startTime":"16:30","endTime":"23:30","depTrain":"","depTime":"","arrTrain":"","arrTime":"","specialNote":"","isOvernight":false},{"id":"X22B","name":"X22B","startTime":"13:30","endTime":"18:30","depTrain":"","depTime":"","arrTrain":"","arrTime":"","specialNote":"","isOvernight":false}];
 
 // ── STATE ────────────────────────────────────────
 let employeeId = '';
@@ -467,14 +463,17 @@ function buildDayCard(ds, label, isToday) {
   if (info.type === 'work') {
     const name = shift ? shift.name : (info.shiftId || '?');
     const startT = info.customStartTime || shift?.startTime || '';
+    const endT   = info.customEndTime   || '';
     const note = info.note || shift?.specialNote || '';
     body = `<div class="dc-body">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:10px">
         <div class="shift-num" style="margin-bottom:0;line-height:1">${name}</div>
-        ${startT ? `<div style="text-align:right;flex-shrink:0">
-          <div style="font-size:10px;color:var(--tx3);letter-spacing:.08em;margin-bottom:2px">⏱ 上班時間</div>
-          <div style="font-size:30px;font-weight:900;font-family:'DM Mono',monospace;color:#fff;line-height:1">${startT}</div>
-        </div>` : ''}
+        <div style="text-align:right;flex-shrink:0">
+          ${startT ? `<div style="font-size:10px;color:var(--tx3);letter-spacing:.08em;margin-bottom:2px">⏱ 上班時間</div>
+          <div style="font-size:30px;font-weight:900;font-family:'DM Mono',monospace;color:#fff;line-height:1">${startT}</div>` : ''}
+          ${endT ? `<div style="font-size:10px;color:var(--tx3);letter-spacing:.08em;margin-top:6px;margin-bottom:2px">🏁 下班時間</div>
+          <div style="font-size:22px;font-weight:700;font-family:'DM Mono',monospace;color:var(--tx2);line-height:1">${endT}</div>` : ''}
+        </div>
       </div>
       ${note ? `<div class="s-note" style="margin-bottom:10px">📋 ${note}</div>` : ''}
       <img class="shift-img" src="${IMAGE_BASE}${info.shiftId}.jpeg" alt="${name}" onerror="this.style.display='none'">
@@ -583,6 +582,12 @@ document.addEventListener('click', e => {
 });
 
 // ── TEMP OVERRIDES ───────────────────────────────
+function getRealDayInfo(ds) {
+  const [y, m, d] = ds.split('-');
+  const data = monthCache[`${y}-${m}`];
+  if (!data) return { type: 'unknown' };
+  return codeToInfo(data[parseInt(d)]);
+}
 function loadTempOverrides() {
   try { tempOverrides = JSON.parse(localStorage.getItem('rr_to_' + employeeId) || '{}'); }
   catch(e) { tempOverrides = {}; }
@@ -592,14 +597,17 @@ function saveTempOverridesToStorage() {
 }
 window.openTempEdit = function(ds) {
   const existing = tempOverrides[ds];
+  const real = getRealDayInfo(ds);
   const wdLabel = ['日','一','二','三','四','五','六'][new Date(ds+'T00:00:00').getDay()];
   const shifts = sortShifts(Object.values(shiftsMap));
   const shiftOpts = shifts.map(s => `<option value="${s.id}">${s.id}</option>`).join('');
-  const curType = existing?.type || 'work';
-  const curShiftId = existing?.shiftId || '';
-  const curCustom = !!(curShiftId && !shiftsMap[curShiftId]);
+  // Pre-fill from existing override; if none, fall back to real day data
+  const curType    = existing?.type    ?? real.type    ?? 'work';
+  const curShiftId = existing?.shiftId ?? real.shiftId ?? '';
+  const curCustom  = !!(curShiftId && !shiftsMap[curShiftId]);
   const curStartTime = existing?.customStartTime || '';
-  const curNote = existing?.note || '';
+  const curEndTime   = existing?.customEndTime   || '';
+  const curNote      = existing?.note            || '';
   const body = `
     <div class="fg">
       <label class="fl">班別類型</label>
@@ -624,11 +632,20 @@ window.openTempEdit = function(ds) {
           </label>
         </div>
       </div>
-      <div class="fg">
-        <label class="fl">⏱ 上班時間（留空則使用工作班預設值）</label>
-        <div style="display:flex;gap:7px">
-          <input class="fi" type="time" id="te_start" style="flex:1" value="${curStartTime}">
-          <button class="btn btn-ghost" style="padding:8px 11px;flex-shrink:0" onclick="document.getElementById('te_start').value=''">✕</button>
+      <div class="f2">
+        <div class="fg">
+          <label class="fl">⏱ 上班時間（留空使用預設）</label>
+          <div style="display:flex;gap:7px">
+            <input class="fi" type="time" id="te_start" style="flex:1" value="${curStartTime}">
+            <button class="btn btn-ghost" style="padding:8px 10px;flex-shrink:0" onclick="document.getElementById('te_start').value=''">✕</button>
+          </div>
+        </div>
+        <div class="fg">
+          <label class="fl">🏁 下班時間（留空使用預設）</label>
+          <div style="display:flex;gap:7px">
+            <input class="fi" type="time" id="te_end" style="flex:1" value="${curEndTime}">
+            <button class="btn btn-ghost" style="padding:8px 10px;flex-shrink:0" onclick="document.getElementById('te_end').value=''">✕</button>
+          </div>
         </div>
       </div>
     </div>
@@ -670,6 +687,8 @@ window.saveTempEdit = function(ds) {
     override.shiftId = shiftId;
     const st = document.getElementById('te_start')?.value || '';
     if (st) override.customStartTime = st;
+    const et = document.getElementById('te_end')?.value || '';
+    if (et) override.customEndTime = et;
   }
   const note = (document.getElementById('te_note')?.value || '').trim();
   if (note) override.note = note;
@@ -841,7 +860,7 @@ function renderShifts() {
   const el = document.getElementById('shiftsList');
   if (!el) return;
   if (!list.length) {
-    el.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">${Object.keys(shiftsMap).length?'🔍':'📋'}</div><div>${Object.keys(shiftsMap).length?'找不到符合班次':'尚無工作班，請點「載入預設工作班」'}</div></div>`;
+    el.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">${Object.keys(shiftsMap).length?'🔍':'📋'}</div><div>${Object.keys(shiftsMap).length?'找不到符合班次':'尚無工作班資料，請從管理員匯入 Excel'}</div></div>`;
     return;
   }
   const cnt = document.getElementById('shiftsCount');
@@ -855,7 +874,6 @@ function renderShifts() {
         <div><div class="sct-label">⏱ 上班</div><div class="sct-val">${fmt(s.startTime)}</div></div>
         <div><div class="sct-label">🏁 下班</div><div class="sct-val">${fmt(s.endTime)}</div></div>
       </div>
-      ${s.isOvernight?'<span class="on-badge">⟳ 跨日班</span>':''}
       <div class="sc-foot">
         <button class="btn-sm" onclick="openEditShift('${s.id}')">✏️ 編輯</button>
         <button class="btn-sm warn" onclick="deleteShift('${s.id}')">🗑</button>
@@ -873,9 +891,15 @@ function openEditShift(id) {
   setModal(`編輯 ${s.name}`, `
     <div class="f2">
       <div class="fg"><label class="fl">上班時間</label>
-        <input class="fi" type="time" id="est" value="${s.startTime}"></div>
+        <div style="display:flex;gap:6px">
+          <input class="fi" type="time" id="est" value="${s.startTime}" style="flex:1">
+          <button class="btn btn-ghost" style="padding:8px 10px;flex-shrink:0" onclick="document.getElementById('est').value=''" title="清除">✕</button>
+        </div></div>
       <div class="fg"><label class="fl">下班時間</label>
-        <input class="fi" type="time" id="eet" value="${s.endTime}"></div>
+        <div style="display:flex;gap:6px">
+          <input class="fi" type="time" id="eet" value="${s.endTime}" style="flex:1">
+          <button class="btn btn-ghost" style="padding:8px 10px;flex-shrink:0" onclick="document.getElementById('eet').value=''" title="清除">✕</button>
+        </div></div>
     </div>
     <div class="fg"><label class="fl">特定行駛說明</label>
       <input class="fi" id="esn" value="${s.specialNote}" placeholder="如 日停、三駛"></div>`,
@@ -905,31 +929,6 @@ window.deleteShift = async function(id) {
     renderShifts(); toast('已刪除', 'ok');
   } catch(e) { toast('刪除失敗', 'err'); }
 };
-window.initBuiltinShifts = async function() {
-  if (!confirm(`確認載入 ${BUILTIN.length} 個預設工作班？現有資料將被覆蓋。`)) return;
-  toast('載入中...', 'ok');
-  try {
-    await sbFetch('/rest/v1/shifts?id=not.is.null', { method: 'DELETE', headers: { 'Prefer': 'return=minimal' } });
-    const rows = BUILTIN.map(s => ({
-      id: s.id, name: s.name,
-      start_time: s.startTime, end_time: s.endTime,
-      dep_train: s.depTrain||'', dep_time: s.depTime||'',
-      arr_train: s.arrTrain||'', arr_time: s.arrTime||'',
-      special_note: s.specialNote||'', is_overnight: s.isOvernight||false,
-      board_time: '', alight_time: ''
-    }));
-    for (let i=0; i<rows.length; i+=100) {
-      await sbFetch('/rest/v1/shifts', {
-        method: 'POST', headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-        body: JSON.stringify(rows.slice(i, i+100))
-      });
-    }
-    await loadShifts();
-    renderShifts();
-    toast(`✅ 已載入 ${BUILTIN.length} 個工作班`, 'ok');
-  } catch(e) { toast('載入失敗：' + e.message, 'err'); }
-};
-
 // Import shift definition Excel (same as railwayshift parseXLSX)
 window.openImportShiftXLSX = function() {
   _parsedShiftXLSX = null;
