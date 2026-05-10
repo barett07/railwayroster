@@ -10,36 +10,190 @@
 - 一般同仁：輸入員工編號 → 查詢個人班表 → 訂閱手機行事曆
 - 管理員（Stan）：上傳公司月班表 Excel → 資料存入 Supabase
 
-## 資料來源
-
-- **月班表**：Stan 從公司取得 Excel 後上傳（格式同 railwayshift 的 parseCheckXLSX）
-- **工作班定義**：班次代號 + 時間資料（結構同 railwayshift 的 shifts）
-
-## 顯示規則
-
-- 預設顯示當月班表
-- 次月資料要等上傳後才能翻閱，未上傳前不顯示
-- 個人 iCal 訂閱連結，依員工編號產生
-
-## 識別方式
-
-同仁輸入員工編號（數字，如 651692）→ 帶出姓名確認 → 顯示班表
-
 ## 架構
 
 - 前端：單一 `index.html`（HTML + CSS + JS inline，無 build tool）
-- 後端：Supabase（新獨立專案，與 railwayshift 分開）
-- 部署：GitHub Pages
+- 後端：Supabase 專案 `pgvrnhzbxgwcqbzeanai`（與 railwayshift 分開）
+- 部署：GitHub Pages（push 後自動部署）
+- iCal：Supabase Edge Function（`supabase/functions/calendar/index.ts`）
 
-## 資料庫規劃（待建）
+## Supabase 資料表
 
-- `workers`：人員名單（name, employee_id）
-- `shifts`：工作班定義（同 railwayshift 結構）
-- `monthly_schedules`：每月每人每日班次（year, month, employee_id, day, shift_id）
+### `workers`
+| 欄位 | 型態 | 說明 |
+|---|---|---|
+| employee_id | text (PK) | 員工編號（如 651692） |
+| name | text | 姓名 |
 
-## 開發順序
+### `shifts`
+| 欄位 | 型態 | 說明 |
+|---|---|---|
+| id | text (PK) | 班次代號（如 `550`、`576V`） |
+| name | text | 班次名稱 |
+| start_time | text | 上班時間（HH:MM） |
+| end_time | text | 下班時間（HH:MM） |
+| special_note | text | 備註 |
+| is_overnight | boolean | 是否跨日（勿依賴此欄，用時間比較判斷） |
 
-1. 建立 Supabase 專案與資料表
-2. 管理員上傳 Excel 解析並存入資料庫
-3. 前端查詢介面（員工編號輸入 → 顯示班表）
-4. iCal 訂閱（Supabase Edge Function）
+### `monthly_schedules`
+| 欄位 | 型態 | 說明 |
+|---|---|---|
+| year | int | 年 |
+| month | int | 月（1–12） |
+| employee_id | text (FK → workers) | 員工編號 |
+| day | int | 日（1–31） |
+| shift_code | text | 班次代號或「休」「例假」「—」等 |
+
+Unique constraint: `(year, month, employee_id, day)`
+
+## 狀態變數（index.html）
+
+```javascript
+let employeeId   = '';          // 目前查詢的員工編號（localStorage: 'rr_emp_id'）
+let employeeName = '';          // 員工姓名（localStorage: 'rr_emp_name'）
+let shiftsMap    = {};          // id → shift 物件
+let monthCache   = {};          // 'YYYY-MM' → { day: shift_code }，每月查詢一次後快取
+let calY = new Date().getFullYear();
+let calM = new Date().getMonth() + 1;
+let homeOffset   = 0;           // 首頁相對今天的偏移天數
+let tempOverrides = {};         // localStorage: 'rr_temp_overrides'（個人臨時修改）
+let _parsedUpload = null;       // 上傳 Excel 解析結果暫存
+let _parsedShiftXLSX = null;   // 工作班 Excel 解析暫存
+let shiftFilter   = 'all';     // 工作班列表篩選
+```
+
+## 資料流
+
+### 查詢流程
+1. 使用者輸入員工編號 → 儲存至 localStorage
+2. `loadMonth(y, m)` 呼叫 Supabase REST API 撈 `monthly_schedules`，存入 `monthCache['YYYY-MM']`
+3. `getDayInfo(ds)` 解析日期：**tempOverrides → monthCache**，無資料回傳 `{ type: 'unknown' }`
+4. `codeToInfo(code)` 把班次代號轉成 `{ type, shiftId?, note? }`
+
+### getDayInfo 優先順序
+```
+tempOverrides[ds]  →（若有）直接回傳，不查 monthCache
+  ↓
+monthCache['YYYY-MM'][day]  →  codeToInfo(code)
+  ↓
+{ type: 'unknown' }  →  顯示「資料載入中...」
+```
+
+### codeToInfo 規則
+| shift_code 值 | type | 說明 |
+|---|---|---|
+| `休`、`—`、`-` | rest | 休班 |
+| `例假` | off | 例假 |
+| `特休` | leave | 特休 |
+| 其他非空字串 | work | shiftId = code |
+| 空字串 | rest | 視為休班 |
+
+## tempOverrides 結構
+
+儲存在 `localStorage['rr_temp_overrides']`（JSON 物件）：
+
+```javascript
+{
+  'YYYY-MM-DD': {
+    type: 'work' | 'rest' | 'off' | 'leave',
+    shiftId: '550',           // type=work 時
+    customStartTime: 'HH:MM', // 選填，覆蓋工作班預設
+    customEndTime:  'HH:MM',  // 選填，覆蓋工作班預設
+    note: '備註文字',          // 選填
+  }
+}
+```
+
+`getRealDayInfo(ds)` — 不走 tempOverrides，直接查 monthCache，供臨時修改 modal 預填使用。
+
+## 班卡顯示規則（buildDayCard）
+
+| type | 顯示內容 |
+|---|---|
+| work | 工作班號 + 上下班時間 + 班卡圖片 |
+| rest | 顯示「昨日跨夜工作班」+ 前一天的工作班圖片（若前天為 work） |
+| off | 例假 |
+| leave | 特休 |
+| unknown | 「資料載入中...」 |
+
+休班（rest）的前一天如果不是 work，則顯示空白休班卡。
+
+## 臨時修改（tempOverrides）
+
+- 觸發：首頁日卡右上角「臨時修改」按鈕
+- 預填順序：`tempOverrides[ds]` → `getRealDayInfo(ds)` → 空白
+- 選擇工作班下拉後，上下班時間欄位自動同步（`tempShiftChange` 函式）
+- 已臨時修改的卡片右上角顯示「已臨時修改」（青藍色 `#22d3ee`）
+- 清除後恢復顯示原班表資料
+
+## 月曆導覽規則
+
+- `calMove(dir)`：前後翻月前先呼叫 `loadMonth`，若該月 monthCache 為空（`{}`）則取消翻頁並顯示 toast
+- 點選月曆格子 → `goToDate(ds)` → 切換首頁並跳到該日（`homeOffset` 設定）
+- 首頁/月曆的當前位置在切換頁籤時**保留**，只有**再次點同一頁籤**才重置
+
+```
+再次點首頁 → homeOffset = 0（回今天）
+再次點月曆 → calY/calM 重置為今天所在月份
+```
+
+## 上傳流程（doUpload）
+
+1. 解析 Excel（`_parsedUpload` 暫存）→ 顯示預覽
+2. 確認後執行 doUpload：
+   a. **workers upsert**（`resolution=merge-duplicates`）— 注意要先用 Map 去重，同一批次內不能有重複 employee_id
+   b. **shifts upsert** — 從解析結果取得本次出現的所有班次
+   c. DELETE `monthly_schedules` 該年月
+   d. INSERT 所有排班行
+
+**重要**：PostgREST 的 `resolution=merge-duplicates` 只處理與資料庫既有行的衝突，同一批次內重複的行仍會 500 (code:21000)。必須在 client 端去重：
+
+```javascript
+const wMap = new Map();
+for (const w of workers) {
+  if (w.id) wMap.set(String(w.id), { employee_id: String(w.id), name: w.name });
+}
+const wRows = [...wMap.values()];
+```
+
+## iCal 訂閱
+
+- 路徑：`supabase/functions/calendar/index.ts`
+- Endpoint：`https://pgvrnhzbxgwcqbzeanai.supabase.co/functions/v1/calendar?id={employeeId}`
+- 公開（no JWT），Apple/Google 日曆可直接訂閱
+- 涵蓋：今天前 3 個月到後 13 個月的工作日（休假不輸出）
+- 提醒：2 小時前（`TRIGGER:-PT2H`）
+- 事件名稱格式：`{班次代號} 工作班`
+- 跨日判斷：`endTime <= startTime`（不依賴 is_overnight）
+- 部署指令：
+  ```bash
+  cd "/Users/stan/Claude Code/railwayroster"
+  supabase functions deploy calendar --project-ref pgvrnhzbxgwcqbzeanai --no-verify-jwt
+  ```
+
+## 班卡圖片
+
+- 存放：`images/` 資料夾
+- 命名：`{shiftId}.jpeg`（如 `550.jpeg`、`576V.jpeg`）
+- 載入失敗自動隱藏（`onerror="this.style.display='none'"`）
+
+## 月曆今日標示
+
+今日格子的日期數字以橘色實心圓（`--acc`）顯示，不用外框：
+
+```css
+.cal-cell.today .cc-day {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--acc); color: #0a0c10;
+  border-radius: 50%; width: 22px; height: 22px;
+  font-size: 11px; margin-bottom: 2px;
+}
+```
+
+## 開發規則
+
+- **寫任何程式碼前**，先與 Stan 討論方向並獲得確認，等 Stan 說「開始生成」再動手
+- 傾向修改現有檔案，不新增
+- 不加非必要的 error handling、fallback 或 future-proof 設計
+- 沒有 build tool，沒有 npm，直接改 index.html 後 push
+- 部署：`git add index.html && git commit -m "..." && git push`
