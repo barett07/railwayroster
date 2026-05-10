@@ -196,4 +196,11 @@ const wRows = [...wMap.values()];
 - 傾向修改現有檔案，不新增
 - 不加非必要的 error handling、fallback 或 future-proof 設計
 - 沒有 build tool，沒有 npm，直接改 index.html 後 push
-- 部署：`git add index.html && git commit -m "..." && git push`
+
+## 發布流程（三步驟，不可跳過）
+
+程式碼完成後，**依序執行以下三步**，不可合併或跳過：
+
+1. **網頁預覽確認** — 先讓 Stan 在瀏覽器中預覽變更，確認畫面與行為符合預期
+2. **git commit** — Stan 確認沒問題後，才進行版本控制（`git add` + `git commit`）
+3. **git push** — commit 完成後，再由 Stan 明確說「推上去」才執行 `git push`
