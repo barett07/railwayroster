@@ -231,8 +231,9 @@ body{background:var(--bg);color:var(--tx);font-family:'Noto Sans TC',sans-serif;
           <div class="leg-item"><div class="leg-dot" style="background:var(--g)"></div>休班</div>
           <div class="leg-item"><div class="leg-dot" style="background:var(--b)"></div>特休</div>
         </div>
+        <div id="calNoData" style="display:none;text-align:center;padding:16px 0;font-size:13px;color:var(--tx3)">📭 本月班表尚未匯入</div>
         <div style="margin-top:14px;display:flex;justify-content:center">
-          <button class="btn btn-secondary" onclick="subscribeCalendar()" style="font-size:13px;padding:9px 18px">📅 訂閱 Apple 行事曆</button>
+          <button class="btn btn-secondary" onclick="subscribeCalendar()" style="font-size:13px;padding:9px 18px">📅 訂閱手機行事曆</button>
         </div>
       </div>
     </div>
@@ -308,6 +309,7 @@ let homeOffset = 0;
 let _parsedUpload = null;
 let _parsedShiftXLSX = null;
 let shiftFilter = 'all';
+let tempOverrides = {};
 
 // ── SUPABASE ─────────────────────────────────────
 const SB_H = {
@@ -374,6 +376,7 @@ function codeToInfo(code) {
   return { type: 'work', shiftId: c };
 }
 function getDayInfo(ds) {
+  if (tempOverrides[ds]) return tempOverrides[ds];
   const [y, m, d] = ds.split('-');
   const data = monthCache[`${y}-${m}`];
   if (!data) return { type: 'unknown' };
@@ -405,6 +408,7 @@ function setEmp() {
   localStorage.setItem('rr_emp_id', val);
   localStorage.removeItem('rr_emp_name');
   monthCache = {};
+  loadTempOverrides();
   updateEmpUI();
   loadEmpName().then(() => updateEmpUI());
   const now = new Date();
@@ -417,7 +421,7 @@ async function loadEmpName() {
   } catch(e) {}
 }
 function changeEmp() {
-  employeeId = ''; employeeName = ''; monthCache = {};
+  employeeId = ''; employeeName = ''; monthCache = {}; tempOverrides = {};
   localStorage.removeItem('rr_emp_id'); localStorage.removeItem('rr_emp_name');
   homeOffset = 0;
   updateEmpUI();
@@ -458,10 +462,12 @@ function buildDayCard(ds, label, isToday) {
   const info = getDayInfo(ds);
   const shift = info.shiftId ? getShift(info.shiftId) : null;
   const bcls = TB[info.type] || 'badge-unknown';
+  const hasOverride = !!tempOverrides[ds];
   let body = '';
   if (info.type === 'work') {
     const name = shift ? shift.name : (info.shiftId || '?');
-    const startT = shift?.startTime || '';
+    const startT = info.customStartTime || shift?.startTime || '';
+    const note = info.note || shift?.specialNote || '';
     body = `<div class="dc-body">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:10px">
         <div class="shift-num" style="margin-bottom:0;line-height:1">${name}</div>
@@ -470,34 +476,41 @@ function buildDayCard(ds, label, isToday) {
           <div style="font-size:30px;font-weight:900;font-family:'DM Mono',monospace;color:#fff;line-height:1">${startT}</div>
         </div>` : ''}
       </div>
-      ${shift?.specialNote ? `<div class="s-note" style="margin-bottom:10px">📋 ${shift.specialNote}</div>` : ''}
+      ${note ? `<div class="s-note" style="margin-bottom:10px">📋 ${note}</div>` : ''}
       <img class="shift-img" src="${IMAGE_BASE}${info.shiftId}.jpeg" alt="${name}" onerror="this.style.display='none'">
     </div>`;
   } else {
     const icons  = { off:'🔴', rest:'🟢', leave:'🟠', unknown:'⏳' };
     const labels = { off:'例假日', rest:'休班', leave:'特休假', unknown:'資料載入中...' };
+    const note = info.note || '';
     body = `<div class="no-work">
       <div class="no-work-icon">${icons[info.type]||'❓'}</div>
       <div class="no-work-label">${labels[info.type]||info.type}</div>
+      ${note ? `<div style="font-size:12px;color:var(--tx3);margin-top:6px">📋 ${note}</div>` : ''}
     </div>`;
   }
-  return `<div class="day-card ${isToday?'is-today':''}">
+  return `<div class="day-card ${isToday?'is-today':''}" ${hasOverride?'style="border-color:rgba(245,158,11,0.5)"':''}>
     <div class="dc-head">
       <div>
         <div class="dc-label">${label}</div>
         <div class="dc-date">${ds}</div>
         <div class="dc-wd">星期${wd(ds)}</div>
       </div>
-      <span class="badge ${bcls}" style="font-size:14px;padding:6px 14px">${TL[info.type]||'—'}</span>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+        <span class="badge ${bcls}" style="font-size:14px;padding:6px 14px">${TL[info.type]||'—'}</span>
+        <button onclick="openTempEdit('${ds}')" style="background:none;border:none;color:${hasOverride?'var(--acc)':'var(--tx3)'};font-size:11px;cursor:pointer;padding:2px 0;font-family:inherit">${hasOverride?'✅ 已臨時修改':'✏️ 臨時修改'}</button>
+      </div>
     </div>
     ${body}
   </div>`;
 }
 
 // ── CALENDAR ─────────────────────────────────────
+const CAL_LABEL = { off:'例假', rest:'休班', leave:'特休' };
 function renderCal() {
   document.getElementById('calTitle').textContent = `${calY} 年 ${calM} 月`;
   const days = daysInMonth(calY, calM), first = new Date(calY, calM-1, 1).getDay(), today = todayStr();
+  const key = `${calY}-${p2(calM)}`;
   let h = ['日','一','二','三','四','五','六'].map(w => `<div class="cal-hd">${w}</div>`).join('');
   for (let i = 0; i < first; i++) h += '<div class="cal-cell empty"></div>';
   for (let d = 1; d <= days; d++) {
@@ -505,7 +518,7 @@ function renderCal() {
     const info = getDayInfo(ds), sh = info.shiftId ? getShift(info.shiftId) : null;
     const cls = TC[info.type] || '';
     const name = sh ? sh.name : (info.type==='work'&&info.shiftId ? info.shiftId : '');
-    const typeLabel = (!name && info.type !== 'unknown') ? (TL[info.type]||'').replace(/[🚄🔴🟢🟠] /,'') : '';
+    const typeLabel = (!name && info.type !== 'unknown') ? (CAL_LABEL[info.type] || '') : '';
     h += `<div class="cal-cell ${cls} ${ds===today?'today':''}">
       <div class="cc-day">${d}</div>
       ${name ? `<div class="cc-shift">${name}</div>` : ''}
@@ -513,15 +526,35 @@ function renderCal() {
     </div>`;
   }
   document.getElementById('calGrid').innerHTML = h;
+  const noData = document.getElementById('calNoData');
+  if (noData) noData.style.display = (key in monthCache && !(monthCache[key] && Object.keys(monthCache[key]).length)) ? '' : 'none';
 }
-function calMove(dir) {
+async function calMove(dir) {
+  const prevY = calY, prevM = calM;
   calM += dir;
   if (calM > 12) { calM = 1; calY++; } else if (calM < 1) { calM = 12; calY--; }
-  loadMonth(calY, calM).then(() => renderCal()).catch(console.warn);
+  try { await loadMonth(calY, calM); } catch(e) { calY = prevY; calM = prevM; console.warn(e); return; }
+  const key = `${calY}-${p2(calM)}`;
+  if (monthCache[key] && Object.keys(monthCache[key]).length === 0) {
+    toast(`${calY} 年 ${calM} 月尚未匯入班表`, 'err');
+    calY = prevY; calM = prevM;
+    return;
+  }
+  renderCal();
 }
 function subscribeCalendar() {
   if (!employeeId) { toast('請先設定員工編號', 'err'); return; }
-  window.open(`webcal://pgvrnhzbxgwcqbzeanai.supabase.co/functions/v1/calendar?id=${encodeURIComponent(employeeId)}`, '_blank');
+  const eid = encodeURIComponent(employeeId);
+  const webcalUrl = `webcal://pgvrnhzbxgwcqbzeanai.supabase.co/functions/v1/calendar?id=${eid}`;
+  const gcalUrl = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent('https://pgvrnhzbxgwcqbzeanai.supabase.co/functions/v1/calendar?id=' + eid)}`;
+  setModal('訂閱手機行事曆',
+    `<p style="font-size:13px;color:var(--tx3);margin-bottom:16px">選擇您的手機類型，訂閱後班表異動將自動同步：</p>
+     <div style="display:flex;flex-direction:column;gap:10px">
+       <button class="btn btn-primary" style="justify-content:center;font-size:14px;padding:12px" onclick="window.open('${webcalUrl}','_blank');closeM()">🍎 iPhone / iPad</button>
+       <button class="btn btn-secondary" style="justify-content:center;font-size:14px;padding:12px" onclick="window.open('${gcalUrl}','_blank');closeM()">🤖 Android（Google 行事曆）</button>
+     </div>`,
+    []
+  );
 }
 function toggleCalDrop() {
   const drop = document.getElementById('calMonthDrop');
@@ -533,15 +566,128 @@ function toggleCalDrop() {
   }).join('');
   drop.classList.add('open');
 }
-function jumpCalTo(y, m) {
-  calY=y; calM=m;
+async function jumpCalTo(y, m) {
   document.getElementById('calMonthDrop').classList.remove('open');
-  loadMonth(y, m).then(() => renderCal()).catch(console.warn);
+  try { await loadMonth(y, m); } catch(e) { console.warn(e); return; }
+  const key = `${y}-${p2(m)}`;
+  if (monthCache[key] && Object.keys(monthCache[key]).length === 0) {
+    toast(`${y} 年 ${m} 月尚未匯入班表`, 'err');
+    return;
+  }
+  calY = y; calM = m;
+  renderCal();
 }
 document.addEventListener('click', e => {
   const drop = document.getElementById('calMonthDrop');
   if (drop && !drop.contains(e.target) && e.target.id !== 'calTitle') drop.classList.remove('open');
 });
+
+// ── TEMP OVERRIDES ───────────────────────────────
+function loadTempOverrides() {
+  try { tempOverrides = JSON.parse(localStorage.getItem('rr_to_' + employeeId) || '{}'); }
+  catch(e) { tempOverrides = {}; }
+}
+function saveTempOverridesToStorage() {
+  if (employeeId) localStorage.setItem('rr_to_' + employeeId, JSON.stringify(tempOverrides));
+}
+window.openTempEdit = function(ds) {
+  const existing = tempOverrides[ds];
+  const wdLabel = ['日','一','二','三','四','五','六'][new Date(ds+'T00:00:00').getDay()];
+  const shifts = sortShifts(Object.values(shiftsMap));
+  const shiftOpts = shifts.map(s => `<option value="${s.id}">${s.id}</option>`).join('');
+  const curType = existing?.type || 'work';
+  const curShiftId = existing?.shiftId || '';
+  const curCustom = !!(curShiftId && !shiftsMap[curShiftId]);
+  const curStartTime = existing?.customStartTime || '';
+  const curNote = existing?.note || '';
+  const body = `
+    <div class="fg">
+      <label class="fl">班別類型</label>
+      <select class="fs" id="te_type" onchange="tempTypeChange()">
+        <option value="work"  ${curType==='work' ?'selected':''}>🚄 工作班</option>
+        <option value="off"   ${curType==='off'  ?'selected':''}>🔴 例假</option>
+        <option value="rest"  ${curType==='rest' ?'selected':''}>🟢 休班</option>
+        <option value="leave" ${curType==='leave'?'selected':''}>🟠 特休</option>
+      </select>
+    </div>
+    <div id="te_work_sec" style="${curType!=='work'?'display:none':''}">
+      <div class="fg">
+        <label class="fl">工作班號</label>
+        <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">
+          <select class="fs" id="te_shift" style="flex:1;${curCustom?'display:none':''}">
+            <option value="">-- 選擇班號 --</option>
+            ${shiftOpts}
+          </select>
+          <input class="fi" type="text" id="te_custom_input" placeholder="自訂班號" value="${curCustom?curShiftId:''}" style="flex:1;${!curCustom?'display:none':''}">
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--tx2);white-space:nowrap;cursor:pointer">
+            <input type="checkbox" id="te_custom_chk" onchange="tempCustomChange()" ${curCustom?'checked':''}> 自訂班號
+          </label>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">⏱ 上班時間（留空則使用工作班預設值）</label>
+        <div style="display:flex;gap:7px">
+          <input class="fi" type="time" id="te_start" style="flex:1" value="${curStartTime}">
+          <button class="btn btn-ghost" style="padding:8px 11px;flex-shrink:0" onclick="document.getElementById('te_start').value=''">✕</button>
+        </div>
+      </div>
+    </div>
+    <div class="fg">
+      <label class="fl">備注</label>
+      <textarea class="fi" id="te_note" rows="2" style="resize:vertical">${curNote}</textarea>
+    </div>`;
+  const actions = [
+    ...(existing ? [{ label:'清除修改', cls:'btn-ghost', fn:`clearTempOverride('${ds}')` }] : []),
+    { label:'取消', cls:'btn-secondary', fn:'closeM()' },
+    { label:'儲存', cls:'btn-primary', fn:`saveTempEdit('${ds}')` },
+  ];
+  setModal(`臨時修改 ${ds}（${wdLabel}）`, body, actions);
+  if (!curCustom && curShiftId) { const s = document.getElementById('te_shift'); if (s) s.value = curShiftId; }
+};
+window.tempTypeChange = function() {
+  const t = document.getElementById('te_type')?.value;
+  const s = document.getElementById('te_work_sec');
+  if (s) s.style.display = t === 'work' ? '' : 'none';
+};
+window.tempCustomChange = function() {
+  const chk = document.getElementById('te_custom_chk');
+  const sel = document.getElementById('te_shift');
+  const inp = document.getElementById('te_custom_input');
+  if (!chk||!sel||!inp) return;
+  sel.style.display = chk.checked ? 'none' : '';
+  inp.style.display  = chk.checked ? '' : 'none';
+};
+window.saveTempEdit = function(ds) {
+  const type = document.getElementById('te_type')?.value;
+  if (!type) return;
+  const override = { type };
+  if (type === 'work') {
+    const isCustom = document.getElementById('te_custom_chk')?.checked;
+    const shiftId = isCustom
+      ? (document.getElementById('te_custom_input')?.value || '').trim()
+      : (document.getElementById('te_shift')?.value || '');
+    if (!shiftId) { toast('請選擇或輸入班號', 'err'); return; }
+    override.shiftId = shiftId;
+    const st = document.getElementById('te_start')?.value || '';
+    if (st) override.customStartTime = st;
+  }
+  const note = (document.getElementById('te_note')?.value || '').trim();
+  if (note) override.note = note;
+  tempOverrides[ds] = override;
+  saveTempOverridesToStorage();
+  closeM();
+  renderHome();
+  if (document.getElementById('page-calendar')?.classList.contains('active')) renderCal();
+  toast('已儲存臨時修改', 'ok');
+};
+window.clearTempOverride = function(ds) {
+  delete tempOverrides[ds];
+  saveTempOverridesToStorage();
+  closeM();
+  renderHome();
+  if (document.getElementById('page-calendar')?.classList.contains('active')) renderCal();
+  toast('已清除臨時修改', 'ok');
+};
 
 // ── ADMIN: UPLOAD MONTHLY SCHEDULE ───────────────
 window.parseUploadXLSX = function(e) {
@@ -879,6 +1025,7 @@ function setStatus(on) {
   if (txt) txt.textContent = on ? '已連線' : '離線';
 }
 function showPage(name) {
+  const alreadyOnCal = name === 'calendar' && document.getElementById('page-calendar')?.classList.contains('active');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + name)?.classList.add('active');
@@ -886,6 +1033,7 @@ function showPage(name) {
   document.querySelectorAll('.nav-tab')[idx[name]]?.classList.add('active');
   if (name === 'home') { homeOffset = 0; renderHome(); }
   if (name === 'calendar') {
+    if (alreadyOnCal) { const now = new Date(); calY = now.getFullYear(); calM = now.getMonth() + 1; }
     updateEmpUI();
     loadMonth(calY, calM).then(() => renderCal()).catch(console.warn);
   }
@@ -905,6 +1053,7 @@ function showApp() {
 async function init() {
   employeeId   = localStorage.getItem('rr_emp_id')   || '';
   employeeName = localStorage.getItem('rr_emp_name') || '';
+  if (employeeId) loadTempOverrides();
   showApp();
   try {
     const now = new Date();
