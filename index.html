@@ -623,7 +623,7 @@ window.openTempEdit = function(ds) {
       <div class="fg">
         <label class="fl">工作班號</label>
         <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">
-          <select class="fs" id="te_shift" style="flex:1;${curCustom?'display:none':''}">
+          <select class="fs" id="te_shift" style="flex:1;${curCustom?'display:none':''}" onchange="tempShiftChange()">
             <option value="">-- 選擇班號 --</option>
             ${shiftOpts}
           </select>
@@ -666,6 +666,16 @@ window.tempTypeChange = function() {
   const t = document.getElementById('te_type')?.value;
   const s = document.getElementById('te_work_sec');
   if (s) s.style.display = t === 'work' ? '' : 'none';
+};
+window.tempShiftChange = function() {
+  const shiftId = document.getElementById('te_shift')?.value;
+  const shift = shiftId ? getShift(shiftId) : null;
+  if (shift) {
+    const s = document.getElementById('te_start');
+    const e = document.getElementById('te_end');
+    if (s) s.value = shift.startTime || '';
+    if (e) e.value = shift.endTime   || '';
+  }
 };
 window.tempCustomChange = function() {
   const chk = document.getElementById('te_custom_chk');
