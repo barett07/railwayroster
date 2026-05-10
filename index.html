@@ -497,7 +497,7 @@ function buildDayCard(ds, label, isToday) {
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
         <span class="badge ${bcls}" style="font-size:14px;padding:6px 14px">${TL[info.type]||'—'}</span>
-        <button onclick="openTempEdit('${ds}')" style="background:none;border:none;color:${hasOverride?'var(--acc)':'var(--tx3)'};font-size:11px;cursor:pointer;padding:2px 0;font-family:inherit">${hasOverride?'✅ 已臨時修改':'✏️ 臨時修改'}</button>
+        <button onclick="openTempEdit('${ds}')" style="background:none;border:none;color:${hasOverride?'#22d3ee':'var(--tx3)'};font-size:11px;cursor:pointer;padding:2px 0;font-family:inherit">${hasOverride?'✅ 已臨時修改':'✏️ 臨時修改'}</button>
       </div>
     </div>
     ${body}
