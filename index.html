@@ -479,14 +479,26 @@ function buildDayCard(ds, label, isToday) {
       <img class="shift-img" src="${IMAGE_BASE}${info.shiftId}.jpeg" alt="${name}" onerror="this.style.display='none'">
     </div>`;
   } else {
-    const icons  = { off:'🔴', rest:'🟢', leave:'🟠', unknown:'⏳' };
-    const labels = { off:'例假日', rest:'休班', leave:'特休假', unknown:'資料載入中...' };
     const note = info.note || '';
-    body = `<div class="no-work">
-      <div class="no-work-icon">${icons[info.type]||'❓'}</div>
-      <div class="no-work-label">${labels[info.type]||info.type}</div>
-      ${note ? `<div style="font-size:12px;color:var(--tx3);margin-top:6px">📋 ${note}</div>` : ''}
-    </div>`;
+    if (info.type === 'unknown') {
+      body = `<div class="no-work"><div class="no-work-icon">⏳</div><div class="no-work-label">資料載入中...</div></div>`;
+    } else if (info.type === 'rest') {
+      const prevDs = addDays(ds, -1);
+      const prevInfo = getDayInfo(prevDs);
+      const prevShift = (prevInfo.type === 'work' && prevInfo.shiftId) ? getShift(prevInfo.shiftId) : null;
+      if (prevShift) {
+        body = `<div class="dc-body">
+          <div style="font-size:10px;color:var(--tx3);letter-spacing:.05em;margin-bottom:6px">⟳ 昨日跨夜工作班</div>
+          ${prevShift.specialNote ? `<div class="s-note" style="margin-bottom:8px">📋 ${prevShift.specialNote}</div>` : ''}
+          <img class="shift-img" src="${IMAGE_BASE}${prevInfo.shiftId}.jpeg" alt="${prevInfo.shiftId}" onerror="this.style.display='none'">
+          ${note ? `<div style="font-size:12px;color:var(--tx3);margin-top:8px">📋 ${note}</div>` : ''}
+        </div>`;
+      } else {
+        body = `<div class="no-work">${note ? `<div style="font-size:12px;color:var(--tx3)">📋 ${note}</div>` : ''}</div>`;
+      }
+    } else {
+      body = `<div class="no-work">${note ? `<div style="font-size:12px;color:var(--tx3)">📋 ${note}</div>` : ''}</div>`;
+    }
   }
   return `<div class="day-card ${isToday?'is-today':''}" ${hasOverride?'style="border-color:rgba(245,158,11,0.5)"':''}>
     <div class="dc-head">
