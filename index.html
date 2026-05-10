@@ -646,11 +646,11 @@ window.doUpload = async function() {
       }
     }
     const rows = [...rowMap.values()];
-    // 4. Upsert in chunks of 500
+    // 4. Insert in chunks of 500 (DELETE already cleared existing data)
     for (let i=0; i<rows.length; i+=500) {
       await sbFetch('/rest/v1/monthly_schedules', {
         method: 'POST',
-        headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+        headers: { 'Prefer': 'return=minimal' },
         body: JSON.stringify(rows.slice(i, i+500))
       });
     }
