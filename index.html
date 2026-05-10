@@ -69,7 +69,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Noto Sans TC',sans-serif;
 .cal-hd{text-align:center;font-size:11px;color:var(--tx3);padding:7px 0;font-weight:700}
 .cal-cell{background:var(--s1);border:1px solid var(--bdr);border-radius:7px;padding:7px 5px;min-height:72px;position:relative;border-left-width:3px;border-left-color:var(--bdr)}
 .cal-cell.empty{background:none;border-color:transparent}
-.cal-cell.today{outline:2px solid var(--acc);outline-offset:0}
+.cal-cell.today .cc-day{display:inline-flex;align-items:center;justify-content:center;background:var(--acc);color:#0a0c10;border-radius:50%;width:22px;height:22px;font-size:11px;margin-bottom:2px}
 .cal-cell.work{border-left-color:var(--acc)}
 .cal-cell.off{border-left-color:var(--r)}
 .cal-cell.rest{border-left-color:var(--g)}
@@ -530,7 +530,7 @@ function renderCal() {
     const cls = TC[info.type] || '';
     const name = sh ? sh.name : (info.type==='work'&&info.shiftId ? info.shiftId : '');
     const typeLabel = (!name && info.type !== 'unknown') ? (CAL_LABEL[info.type] || '') : '';
-    h += `<div class="cal-cell ${cls} ${ds===today?'today':''}">
+    h += `<div class="cal-cell ${cls} ${ds===today?'today':''}" onclick="goToDate('${ds}')" style="cursor:pointer">
       <div class="cc-day">${d}</div>
       ${name ? `<div class="cc-shift">${name}</div>` : ''}
       ${typeLabel ? `<div class="cc-type">${typeLabel}</div>` : ''}
@@ -1047,13 +1047,17 @@ function setStatus(on) {
   if (txt) txt.textContent = on ? '已連線' : '離線';
 }
 function showPage(name) {
-  const alreadyOnCal = name === 'calendar' && document.getElementById('page-calendar')?.classList.contains('active');
+  const alreadyOnHome = name === 'home' && document.getElementById('page-home')?.classList.contains('active');
+  const alreadyOnCal  = name === 'calendar' && document.getElementById('page-calendar')?.classList.contains('active');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + name)?.classList.add('active');
   const idx = { home:0, calendar:1, admin:2 };
   document.querySelectorAll('.nav-tab')[idx[name]]?.classList.add('active');
-  if (name === 'home') { homeOffset = 0; renderHome(); }
+  if (name === 'home') {
+    if (alreadyOnHome) homeOffset = 0;
+    renderHome();
+  }
   if (name === 'calendar') {
     if (alreadyOnCal) { const now = new Date(); calY = now.getFullYear(); calM = now.getMonth() + 1; }
     updateEmpUI();
@@ -1061,6 +1065,12 @@ function showPage(name) {
   }
   if (name === 'admin') renderShifts();
 }
+window.goToDate = function(ds) {
+  const today = todayStr();
+  homeOffset = Math.round((new Date(ds+'T00:00:00') - new Date(today+'T00:00:00')) / 86400000);
+  const [y, m] = ds.split('-');
+  loadMonth(+y, +m).catch(() => {}).finally(() => showPage('home'));
+};
 function showApp() {
   document.getElementById('loading').style.display = 'none';
   const app = document.getElementById('app');
