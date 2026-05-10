@@ -622,9 +622,14 @@ window.doUpload = async function() {
   const prev = document.getElementById('xlUpPrev');
   prev.textContent = '上傳中，請稍候...';
   try {
-    // 1. Upsert workers (only those with IDs)
-    const wRows = workers.filter(w => w.id).map(w => ({ employee_id: String(w.id), name: w.name }));
+    // 1. Upsert workers (deduplicate by employee_id — same person may appear twice in Excel)
+    const wMap = new Map();
+    for (const w of workers) {
+      if (w.id) wMap.set(String(w.id), { employee_id: String(w.id), name: w.name });
+    }
+    const wRows = [...wMap.values()];
     if (wRows.length) {
+      prev.textContent = `上傳中：同步員工資料（${wRows.length} 人）...`;
       await sbFetch('/rest/v1/workers', {
         method: 'POST',
         headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
@@ -632,6 +637,7 @@ window.doUpload = async function() {
       });
     }
     // 2. Delete existing for this year/month
+    prev.textContent = `上傳中：清除舊班表資料...`;
     await sbFetch(`/rest/v1/monthly_schedules?year=eq.${year}&month=eq.${month}`, {
       method: 'DELETE', headers: { 'Prefer': 'return=minimal' }
     });
@@ -647,7 +653,9 @@ window.doUpload = async function() {
     }
     const rows = [...rowMap.values()];
     // 4. Insert in chunks of 500 (DELETE already cleared existing data)
+    const total = rows.length;
     for (let i=0; i<rows.length; i+=500) {
+      prev.textContent = `上傳中：寫入班表（${Math.min(i+500, total)}/${total} 筆）...`;
       await sbFetch('/rest/v1/monthly_schedules', {
         method: 'POST',
         headers: { 'Prefer': 'return=minimal' },
