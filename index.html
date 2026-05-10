@@ -635,21 +635,22 @@ window.doUpload = async function() {
     await sbFetch(`/rest/v1/monthly_schedules?year=eq.${year}&month=eq.${month}`, {
       method: 'DELETE', headers: { 'Prefer': 'return=minimal' }
     });
-    // 3. Build insert rows
-    const rows = [];
+    // 3. Build insert rows (deduplicate by employee_id+day)
+    const rowMap = new Map();
     for (const w of workers) {
       if (!w.id) continue;
       const empId = String(w.id);
       for (const [d, code] of Object.entries(w.days)) {
         const c = code.trim();
-        if (c) rows.push({ year, month, employee_id: empId, day: parseInt(d), shift_code: c });
+        if (c) rowMap.set(`${empId}-${d}`, { year, month, employee_id: empId, day: parseInt(d), shift_code: c });
       }
     }
-    // 4. Insert in chunks of 500
+    const rows = [...rowMap.values()];
+    // 4. Upsert in chunks of 500
     for (let i=0; i<rows.length; i+=500) {
       await sbFetch('/rest/v1/monthly_schedules', {
         method: 'POST',
-        headers: { 'Prefer': 'return=minimal' },
+        headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
         body: JSON.stringify(rows.slice(i, i+500))
       });
     }
