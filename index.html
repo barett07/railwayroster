@@ -557,7 +557,7 @@ function subscribeCalendar() {
   if (!employeeId) { toast('請先設定員工編號', 'err'); return; }
   const eid = encodeURIComponent(employeeId);
   const webcalUrl = `webcal://pgvrnhzbxgwcqbzeanai.supabase.co/functions/v1/calendar?id=${eid}`;
-  const gcalUrl = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent('https://pgvrnhzbxgwcqbzeanai.supabase.co/functions/v1/calendar?id=' + eid)}`;
+  const gcalUrl = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent('webcal://pgvrnhzbxgwcqbzeanai.supabase.co/functions/v1/calendar?id=' + eid)}`;
   setModal('訂閱手機行事曆',
     `<p style="font-size:13px;color:var(--tx3);margin-bottom:16px">選擇您的手機類型，訂閱後班表異動將自動同步：</p>
      <div style="display:flex;flex-direction:column;gap:10px">
