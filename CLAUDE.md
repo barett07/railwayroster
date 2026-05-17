@@ -171,6 +171,12 @@ const wRows = [...wMap.values()];
   supabase functions deploy calendar --project-ref pgvrnhzbxgwcqbzeanai --no-verify-jwt
   ```
 
+### iCal 格式注意事項（踩過的坑）
+
+- **VTIMEZONE 必須附帶**：只要 DTSTART/DTEND 有 `TZID=Asia/Taipei`，iCal 裡就必須有 `BEGIN:VTIMEZONE` 元件，否則 Google Calendar 伺服器拒絕解析，顯示「無法新增日曆，請檢查網址」
+- **結尾 CRLF**：`lines.join('\r\n')` 後面要加 `+ '\r\n'`，最後一行才有結尾符
+- **Android 訂閱 URL 的 `cid` 必須用 `webcal://`**：`https://calendar.google.com/calendar/r?cid=webcal%3A%2F%2F...`，用 `https://` 在部分 Google Calendar 版本會失敗
+
 ## 班卡圖片
 
 - 存放：`images/` 資料夾
@@ -189,6 +195,30 @@ const wRows = [...wMap.values()];
   font-size: 11px; margin-bottom: 2px;
 }
 ```
+
+## UI/UX 行動裝置規範（重要）
+
+與 railwayshift 保持一致。修改 CSS 前務必遵守，否則 mobile Safari 體驗會嚴重劣化：
+
+### 1. 表單輸入框字體 ≥ 16px
+所有 `.fi, .fs, .srch` 字體**必須 ≥ 16px**。iOS Safari 對字體 < 16px 的 input 會自動放大頁面。
+
+### 2. 觸控目標 ≥ 36-40px
+按鈕類元素需要 `min-height`：`.nav-tab`、`.btn`、`.btn-sm` ≥ 40px；`.filter-btn` ≥ 36px。
+
+### 3. 鍵盤焦點外框（`:focus-visible`）
+全域 `:focus-visible` 規則只在鍵盤導航時顯示橘色外框，不影響滑鼠/觸控 — **不要用 `:focus` 設外框**（會被觸控觸發殘留）。
+
+### 4. 觸控裝置 `:hover` 殘留（最易踩雷）
+
+mobile Safari 點完按鈕後 `:hover` 狀態會「卡住」。修法：CSS 末尾的 `@media (hover: none)` 區塊把所有 `:hover` 規則 reset 到「未 hover」狀態。
+
+**🚨 必讀規則**：
+- reset 區塊**必須放在所有 `:hover` 規則之後**（CSS「後者勝出」原則），否則被原本的 `:hover` 規則覆蓋
+- **新增任何 `:hover` 規則時**，必須同時在 reset 區塊內加對應的 reset 行（reset 為該元素的「未 hover」狀態值）
+
+### 5. 純圖示按鈕需加 `aria-label`
+例：`<button aria-label="上一個月">‹</button>`、`<button aria-label="刪除班次 ${s.name}">🗑</button>`。否則螢幕閱讀器會念出無意義字元。
 
 ## 開發規則
 
