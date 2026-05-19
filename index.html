@@ -309,7 +309,7 @@ button:focus-visible,.btn:focus-visible,.btn-sm:focus-visible,.nav-tab:focus-vis
 const SUPABASE_URL      = 'https://pgvrnhzbxgwcqbzeanai.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBndnJuaHpieGd3Y3FiemVhbmFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzOTg3NDYsImV4cCI6MjA5Mzk3NDc0Nn0.hcIlr_ZIaDjd1YRWJv8rM3wu6-Ix16pPyBVgVHeE4xc';
 const IMAGE_BASE        = 'https://barett07.github.io/railwayshift/images/';
-const ADMIN_MODE        = new URLSearchParams(window.location.search).get('admin') === '651692';
+const ADMIN_MODE        = new URLSearchParams(window.location.search).get('admin') === '1';
 
 // ── STATE ────────────────────────────────────────
 let employeeId = '';
@@ -334,6 +334,45 @@ async function sbFetch(path, opts) {
   const r = await fetch(SUPABASE_URL + path, { ...opts, headers: { ...SB_H, ...(opts?.headers || {}) } });
   if (!r.ok) { const t = await r.text(); throw new Error(r.status + ' ' + t.slice(0, 160)); }
   return r.headers.get('content-length') === '0' || r.status === 204 ? null : r.json();
+}
+
+// ── 寫入密碼管理 ──────────────────────────────
+const _WTK = 'rr_write_token';
+function _getWT(){ return localStorage.getItem(_WTK); }
+function _saveWT(t){ localStorage.setItem(_WTK, t); }
+function _clearWT(){ localStorage.removeItem(_WTK); }
+let _wtResolve = null;
+function _requireWT(){
+  const t = _getWT();
+  if(t) return Promise.resolve(t);
+  return new Promise(resolve => {
+    _wtResolve = resolve;
+    setModal('管理員驗證',
+      `<div class="fg"><label class="fl">寫入密碼</label>
+       <input class="fi" type="password" id="wtInput" placeholder="請輸入密碼" autocomplete="current-password" style="font-size:16px"></div>`,
+      [{label:'取消',cls:'btn-secondary',fn:'closeM()'},{label:'確認',cls:'btn-primary',fn:'_confirmWT()'}]
+    );
+    setTimeout(()=>document.getElementById('wtInput')?.focus(),100);
+  });
+}
+window._confirmWT = function(){
+  const val = (document.getElementById('wtInput')?.value||'').trim();
+  if(!val) return;
+  _saveWT(val); closeM();
+  if(_wtResolve){ _wtResolve(val); _wtResolve=null; }
+};
+async function adminFetch(action, payload){
+  const token = await _requireWT();
+  const res = await fetch(SUPABASE_URL + '/functions/v1/admin-write', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+SUPABASE_ANON_KEY, 'X-Write-Token': token },
+    body: JSON.stringify({ action, ...payload })
+  });
+  if(!res.ok){
+    if(res.status === 401){ _clearWT(); throw new Error('密碼錯誤，請重新操作'); }
+    const t = await res.text();
+    throw new Error(res.status + ' ' + t.slice(0, 160));
+  }
 }
 
 // ── DATE UTILS ───────────────────────────────────
@@ -835,17 +874,11 @@ window.doUpload = async function() {
     const wRows = [...wMap.values()];
     if (wRows.length) {
       prev.textContent = `上傳中：同步員工資料（${wRows.length} 人）...`;
-      await sbFetch('/rest/v1/workers', {
-        method: 'POST',
-        headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-        body: JSON.stringify(wRows)
-      });
+      await adminFetch('upsert-workers', { rows: wRows });
     }
     // 2. Delete existing for this year/month
     prev.textContent = `上傳中：清除舊班表資料...`;
-    await sbFetch(`/rest/v1/monthly_schedules?year=eq.${year}&month=eq.${month}`, {
-      method: 'DELETE', headers: { 'Prefer': 'return=minimal' }
-    });
+    await adminFetch('delete-schedules', { year, month });
     // 3. Build insert rows (deduplicate by employee_id+day)
     const rowMap = new Map();
     for (const w of workers) {
@@ -861,11 +894,7 @@ window.doUpload = async function() {
     const total = rows.length;
     for (let i=0; i<rows.length; i+=500) {
       prev.textContent = `上傳中：寫入班表（${Math.min(i+500, total)}/${total} 筆）...`;
-      await sbFetch('/rest/v1/monthly_schedules', {
-        method: 'POST',
-        headers: { 'Prefer': 'return=minimal' },
-        body: JSON.stringify(rows.slice(i, i+500))
-      });
+      await adminFetch('insert-schedules', { rows: rows.slice(i, i+500) });
     }
     // 5. Clear cache and refresh
     const key = `${year}-${p2(month)}`;
@@ -952,11 +981,7 @@ window.saveShift = async function(id) {
   const specialNote = document.getElementById('esn').value.trim();
   const isOvernight = endTime && startTime ? endTime <= startTime : false;
   try {
-    await sbFetch(`/rest/v1/shifts?id=eq.${encodeURIComponent(id)}`, {
-      method: 'PATCH',
-      headers: { 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ start_time: startTime, end_time: endTime, special_note: specialNote, is_overnight: isOvernight })
-    });
+    await adminFetch('update-shift', { id, data: { start_time: startTime, end_time: endTime, special_note: specialNote, is_overnight: isOvernight } });
     if (shiftsMap[id]) Object.assign(shiftsMap[id], { startTime, endTime, specialNote, isOvernight });
     renderShifts(); closeM(); toast('已儲存', 'ok');
   } catch(e) { toast('儲存失敗：' + e.message, 'err'); }
@@ -964,7 +989,7 @@ window.saveShift = async function(id) {
 window.deleteShift = async function(id) {
   if (!confirm(`確定刪除 ${id}？`)) return;
   try {
-    await sbFetch(`/rest/v1/shifts?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE', headers: { 'Prefer': 'return=minimal' } });
+    await adminFetch('delete-shift', { id });
     delete shiftsMap[id];
     renderShifts(); toast('已刪除', 'ok');
   } catch(e) { toast('刪除失敗', 'err'); }
@@ -1027,13 +1052,9 @@ window.doImportShifts = async function() {
     // Deduplicate by id (Excel may have repeated rows)
     const seen = new Set();
     const rows = _parsedShiftXLSX.filter(s => { if (seen.has(s.id)) return false; seen.add(s.id); return true; });
-    await sbFetch('/rest/v1/shifts?id=not.is.null', { method:'DELETE', headers:{'Prefer':'return=minimal'} });
+    await adminFetch('delete-all-shifts', {});
     for (let i=0; i<rows.length; i+=100) {
-      await sbFetch('/rest/v1/shifts', {
-        method:'POST',
-        headers:{'Prefer':'resolution=merge-duplicates,return=minimal'},
-        body:JSON.stringify(rows.slice(i,i+100))
-      });
+      await adminFetch('upsert-shifts', { rows: rows.slice(i, i+100) });
     }
     await loadShifts(); renderShifts(); closeM();
     toast(`✅ 已匯入 ${rows.length} 個工作班`, 'ok');
