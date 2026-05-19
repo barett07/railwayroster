@@ -311,6 +311,8 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const IMAGE_BASE        = 'https://barett07.github.io/railwayshift/images/';
 const ADMIN_MODE        = new URLSearchParams(window.location.search).get('admin') === '1';
 
+const escapeHtml = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+
 // ── STATE ────────────────────────────────────────
 let employeeId = '';
 let employeeName = '';
@@ -523,7 +525,7 @@ function buildDayCard(ds, label, isToday) {
     const note = info.note || shift?.specialNote || '';
     body = `<div class="dc-body">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:10px">
-        <div class="shift-num" style="margin-bottom:0;line-height:1">${name}</div>
+        <div class="shift-num" style="margin-bottom:0;line-height:1">${escapeHtml(name)}</div>
         <div style="text-align:right;flex-shrink:0">
           ${startT ? `<div style="font-size:10px;color:var(--tx3);letter-spacing:.08em;margin-bottom:2px">⏱ 上班時間</div>
           <div style="font-size:30px;font-weight:900;font-family:'DM Mono',monospace;color:#fff;line-height:1">${startT}</div>` : ''}
@@ -531,7 +533,7 @@ function buildDayCard(ds, label, isToday) {
           <div style="font-size:22px;font-weight:700;font-family:'DM Mono',monospace;color:var(--tx2);line-height:1">${endT}</div>` : ''}
         </div>
       </div>
-      ${note ? `<div class="s-note" style="margin-bottom:10px">📋 ${note}</div>` : ''}
+      ${note ? `<div class="s-note" style="margin-bottom:10px">📋 ${escapeHtml(note)}</div>` : ''}
       <img class="shift-img" src="${IMAGE_BASE}${info.shiftId}.jpeg" alt="${name}" onerror="this.style.display='none'">
     </div>`;
   } else {
@@ -937,8 +939,8 @@ function renderShifts() {
   el.innerHTML = list.map(s => {
     const isV = /[AV]$/.test(s.name) || s.name.includes('AV');
     return `<div class="sc ${isV?'variant':''}">
-      <div class="sc-name">${s.name}${isV?' <span class="var-tag">假日變班</span>':''}</div>
-      ${s.specialNote?`<div class="sc-note">📋 ${s.specialNote}</div>`:''}
+      <div class="sc-name">${escapeHtml(s.name)}${isV?' <span class="var-tag">假日變班</span>':''}</div>
+      ${s.specialNote?`<div class="sc-note">📋 ${escapeHtml(s.specialNote)}</div>`:''}
       <div class="sc-times">
         <div><div class="sct-label">⏱ 上班</div><div class="sct-val">${fmt(s.startTime)}</div></div>
         <div><div class="sct-label">🏁 下班</div><div class="sct-val">${fmt(s.endTime)}</div></div>
