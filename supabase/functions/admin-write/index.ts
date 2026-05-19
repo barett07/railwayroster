@@ -73,6 +73,8 @@ Deno.serve(async (req) => {
       error = e
       break
     }
+    case 'verify':
+      break
     default:
       return new Response('Unknown action', { status: 400, headers: CORS })
   }

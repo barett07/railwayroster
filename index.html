@@ -369,7 +369,7 @@ async function adminFetch(action, payload){
     body: JSON.stringify({ action, ...payload })
   });
   if(!res.ok){
-    if(res.status === 401){ _clearWT(); throw new Error('密碼錯誤，請重新操作'); }
+    if(res.status === 401){ _clearWT(); throw new Error('管理員密碼已失效，請重新整理頁面'); }
     const t = await res.text();
     throw new Error(res.status + ' ' + t.slice(0, 160));
   }
@@ -1071,7 +1071,7 @@ function setModal(title, body, actions, wide) {
     `<button class="btn ${a.cls}" onclick="${a.fn}">${a.label}</button>`).join('');
   document.getElementById('overlay').classList.add('open');
 }
-function overlayClick(e) { if (e.target===document.getElementById('overlay')) closeM(); }
+function overlayClick(e) { if (!_adminAuthPending && e.target===document.getElementById('overlay')) closeM(); }
 function closeM() { document.getElementById('overlay').classList.remove('open'); }
 function toast(msg, type='ok') {
   const el = document.createElement('div');
@@ -1114,9 +1114,51 @@ function showApp() {
   const app = document.getElementById('app');
   app.classList.remove('app-hidden');
   app.style.display = 'flex';
-  if (ADMIN_MODE) app.classList.add('admin-mode');
   updateEmpUI();
   renderHome();
+}
+let _adminAuthPending = false;
+async function _verifyToken(token) {
+  try {
+    const res = await fetch(SUPABASE_URL + '/functions/v1/admin-write', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY, 'X-Write-Token': token },
+      body: JSON.stringify({ action: 'verify' })
+    });
+    return res.status === 204;
+  } catch { return false; }
+}
+function _showAdminModal(errMsg) {
+  _adminAuthPending = true;
+  setModal('管理員驗證',
+    (errMsg ? `<div style="color:var(--r);font-size:13px;margin-bottom:10px">⚠ ${errMsg}</div>` : '') +
+    `<div class="fg"><label class="fl">管理員密碼</label>
+     <input class="fi" type="password" id="wtInput" placeholder="請輸入密碼" autocomplete="current-password" style="font-size:16px"></div>`,
+    [{ label: '確認', cls: 'btn-primary', fn: '_confirmAdminLogin()' }]
+  );
+  setTimeout(() => document.getElementById('wtInput')?.focus(), 100);
+}
+window._confirmAdminLogin = async function() {
+  const val = (document.getElementById('wtInput')?.value || '').trim();
+  if (!val) return;
+  const btn = document.querySelector('#modalActions .btn-primary');
+  if (btn) { btn.textContent = '驗證中...'; btn.disabled = true; }
+  const ok = await _verifyToken(val);
+  if (ok) {
+    _saveWT(val); _adminAuthPending = false; closeM();
+    document.getElementById('app').classList.add('admin-mode');
+  } else {
+    _showAdminModal('密碼錯誤，請重試');
+  }
+};
+async function _initAdminAuth() {
+  const saved = _getWT();
+  if (saved) {
+    const ok = await _verifyToken(saved);
+    if (ok) { document.getElementById('app').classList.add('admin-mode'); return; }
+    _clearWT();
+  }
+  _showAdminModal();
 }
 
 // ── INIT ─────────────────────────────────────────
@@ -1125,6 +1167,7 @@ async function init() {
   employeeName = localStorage.getItem('rr_emp_name') || '';
   if (employeeId) loadTempOverrides();
   showApp();
+  if (ADMIN_MODE) _initAdminAuth();
   try {
     const now = new Date();
     const tasks = [loadShifts()];
