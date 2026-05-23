@@ -1,0 +1,7 @@
+.DS_Store
+AGENTS.md
+.env
+.env.local
+supabase/.temp/
+*.xlsx
+*.log
