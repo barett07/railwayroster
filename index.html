@@ -312,6 +312,15 @@ const IMAGE_BASE        = 'https://barett07.github.io/railwayshift/images/';
 const ADMIN_MODE        = new URLSearchParams(window.location.search).get('admin') === '1';
 
 const escapeHtml = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+function isShiftVariant(name) {
+  return /(?:AV|V)$/.test(String(name ?? '').trim());
+}
+function getShiftImageSrc(shiftId) {
+  const name = String(shiftId ?? '').trim();
+  if (!name) return '';
+  const imageName = isShiftVariant(name) ? name.replace(/(?:AV|V)$/, '') : name;
+  return IMAGE_BASE + imageName + '.jpeg';
+}
 
 // ── STATE ────────────────────────────────────────
 let employeeId = '';
@@ -534,7 +543,7 @@ function buildDayCard(ds, label, isToday) {
         </div>
       </div>
       ${note ? `<div class="s-note" style="margin-bottom:10px">📋 ${escapeHtml(note)}</div>` : ''}
-      <img class="shift-img" src="${IMAGE_BASE}${info.shiftId}.jpeg" alt="${name}" onerror="this.style.display='none'">
+      <img class="shift-img" src="${getShiftImageSrc(info.shiftId)}" alt="${name}" onerror="this.style.display='none'">
     </div>`;
   } else {
     const note = info.note || '';
@@ -548,7 +557,7 @@ function buildDayCard(ds, label, isToday) {
         body = `<div class="dc-body">
           <div style="font-size:10px;color:var(--tx3);letter-spacing:.05em;margin-bottom:6px">⟳ 昨日跨夜工作班</div>
           ${prevShift.specialNote ? `<div class="s-note" style="margin-bottom:8px">📋 ${prevShift.specialNote}</div>` : ''}
-          <img class="shift-img" src="${IMAGE_BASE}${prevInfo.shiftId}.jpeg" alt="${prevInfo.shiftId}" onerror="this.style.display='none'">
+          <img class="shift-img" src="${getShiftImageSrc(prevInfo.shiftId)}" alt="${prevInfo.shiftId}" onerror="this.style.display='none'">
           ${note ? `<div style="font-size:12px;color:var(--tx3);margin-top:8px">📋 ${note}</div>` : ''}
         </div>`;
       } else {
@@ -924,7 +933,7 @@ window.doUpload = async function() {
 function renderShifts() {
   const q = (document.getElementById('shiftSrch')?.value || '').toLowerCase();
   let list = Object.values(shiftsMap);
-  if (shiftFilter === 'variant')   list = list.filter(s => /[AV]/.test(s.name));
+  if (shiftFilter === 'variant')   list = list.filter(s => isShiftVariant(s.name));
   if (shiftFilter === 'overnight') list = list.filter(s => s.isOvernight);
   if (q) list = list.filter(s => s.name.toLowerCase().includes(q));
   list = sortShifts(list);
@@ -937,7 +946,7 @@ function renderShifts() {
   const cnt = document.getElementById('shiftsCount');
   if (cnt) cnt.textContent = `共 ${Object.keys(shiftsMap).length} 班`;
   el.innerHTML = list.map(s => {
-    const isV = /[AV]$/.test(s.name) || s.name.includes('AV');
+    const isV = isShiftVariant(s.name);
     return `<div class="sc ${isV?'variant':''}">
       <div class="sc-name">${escapeHtml(s.name)}${isV?' <span class="var-tag">假日變班</span>':''}</div>
       ${s.specialNote?`<div class="sc-note">📋 ${escapeHtml(s.specialNote)}</div>`:''}
