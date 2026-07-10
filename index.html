@@ -200,7 +200,7 @@ button:focus-visible,.btn:focus-visible,.btn-sm:focus-visible,.nav-tab:focus-vis
           <div style="font-size:13px;color:var(--tx3);margin-bottom:28px">輸入員工編號，查詢自己的班表</div>
           <div style="display:flex;gap:9px;max-width:300px;margin:0 auto">
             <input class="fi" type="text" id="empInput" placeholder="員工編號" inputmode="numeric"
-              onkeydown="if(event.key==='Enter')setEmp()" style="flex:1;font-size:15px;padding:10px 13px">
+              onkeydown="if(event.key==='Enter')setEmp()" style="flex:1;font-size:16px;padding:10px 13px">
             <button class="btn btn-primary" onclick="setEmp()">查詢</button>
           </div>
         </div>
@@ -466,24 +466,24 @@ async function loadMonth(y, m) {
 }
 
 // ── EMPLOYEE ─────────────────────────────────────
-function setEmp() {
-  const val = (document.getElementById('empInput')?.value || '').trim();
+async function setEmp() {
+  const val = (document.getElementById('empInput')?.value || '').trim().replace(/^0+/, '');
   if (!val) { toast('請輸入員工編號', 'err'); return; }
-  employeeId = val; employeeName = '';
+  let data;
+  try {
+    data = await sbFetch(`/rest/v1/workers?employee_id=eq.${encodeURIComponent(val)}&select=name&limit=1`);
+  } catch(e) {
+    toast('連線失敗，請稍後再試', 'err'); return;
+  }
+  if (!data?.length) { toast('查無此員工編號，請確認後重新輸入', 'err'); return; }
+  employeeId = val; employeeName = data[0].name || '';
   localStorage.setItem('rr_emp_id', val);
-  localStorage.removeItem('rr_emp_name');
+  localStorage.setItem('rr_emp_name', employeeName);
   monthCache = {};
   loadTempOverrides();
   updateEmpUI();
-  loadEmpName().then(() => updateEmpUI());
   const now = new Date();
   loadMonth(now.getFullYear(), now.getMonth()+1).then(() => renderHome()).catch(console.warn);
-}
-async function loadEmpName() {
-  try {
-    const data = await sbFetch(`/rest/v1/workers?employee_id=eq.${encodeURIComponent(employeeId)}&select=name&limit=1`);
-    if (data?.length) { employeeName = data[0].name; localStorage.setItem('rr_emp_name', employeeName); }
-  } catch(e) {}
 }
 function changeEmp() {
   employeeId = ''; employeeName = ''; monthCache = {}; tempOverrides = {};
@@ -1178,8 +1178,9 @@ async function _initAdminAuth() {
 
 // ── INIT ─────────────────────────────────────────
 async function init() {
-  employeeId   = localStorage.getItem('rr_emp_id')   || '';
+  employeeId   = (localStorage.getItem('rr_emp_id') || '').replace(/^0+/, '');
   employeeName = localStorage.getItem('rr_emp_name') || '';
+  if (employeeId) localStorage.setItem('rr_emp_id', employeeId);
   if (employeeId) loadTempOverrides();
   showApp();
   if (ADMIN_MODE) _initAdminAuth();
