@@ -19,11 +19,19 @@
 ## ⚠️ 紅線(不知道就會犯錯,細節在 NOTES.md)
 
 1. **innerHTML 中所有來自 Supabase 的文字必須套 `escapeHtml()`**
-2. **寫入一律走 Edge Function `admin-write`**(RLS:anon 只能 SELECT);部署 `calendar` 必帶 `--no-verify-jwt`,MCP 部署必須明確傳 `verify_jwt: false`(預設 true 會被靜默重置)
+2. **寫入一律走 Edge Function `admin-write`**(RLS:anon 只能 SELECT);**部署一律用 `./deploy.sh`**(verify_jwt 已寫死在 `supabase/config.toml`,腳本含部署後自動驗證),避免用 MCP 部署(verify_jwt 預設 true 會被靜默重置)
 3. **upsert 前 client 端先去重**:PostgREST `merge-duplicates` 不處理同批次內的重複行,會 500
 4. **`is_overnight` 欄位不可信**,跨日判斷用 `endTime <= startTime`
 5. CSS 行動裝置規範:input 字體 ≥ 16px、觸控目標 ≥ 40px、新增 `:hover` 必須同步加 `@media (hover: none)` reset 行、圖示按鈕加 `aria-label`
 6. iCal 有 `TZID` 就必須有 `VTIMEZONE` 區塊,結尾要補 `\r\n`
+
+## ✅ 改完自檢(交付前逐條確認)
+
+- 改了 CSS?→ 新增的 `:hover` 都加進 reset 區塊了;input 字體 ≥ 16px;觸控目標 ≥ 40px;圖示按鈕有 `aria-label`
+- 改了 innerHTML?→ Supabase 來的文字都套了 `escapeHtml()`
+- 改了上傳流程?→ upsert 前有 client 端去重
+- 改了 Edge Function?→ 用 `./deploy.sh` 部署且驗證全綠
+- 在本地實際開啟頁面看過改動,不是只看程式碼
 
 ## 開發規則
 

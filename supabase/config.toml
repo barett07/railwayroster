@@ -1,0 +1,9 @@
+# 各 Edge Function 的設定寫死在此,CLI 部署時自動套用,不再依賴人工帶參數
+# calendar 必須免 JWT(行事曆訂閱端不帶 JWT)
+project_id = "railwayroster"
+
+[functions.admin-write]
+verify_jwt = true
+
+[functions.calendar]
+verify_jwt = false
