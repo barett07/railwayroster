@@ -96,6 +96,8 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSyst
 .cal-nav-btn{background:var(--s2);border:none;color:var(--acc);width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:transform .1s ease-out,background .15s}
 .cal-nav-btn:hover{background:var(--s3)}
 .cal-nav-btn:active{transform:scale(.92)}
+.cal-nav-btn.glass{background:var(--glass-lq);-webkit-backdrop-filter:blur(20px) saturate(200%);backdrop-filter:blur(20px) saturate(200%);border:1px solid var(--glass-edge);box-shadow:0 6px 18px rgba(0,0,0,.25),0 1px 2px rgba(0,0,0,.1),inset 0 1px 0 rgba(255,255,255,.18),inset 0 -1px 1px rgba(255,255,255,.05)}
+.cal-nav-btn.glass:hover{background:var(--glass-lq);filter:brightness(1.2)}
 .cal-title{font-size:20px;font-weight:900;cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px}
 .cal-title:hover{color:var(--acc)}
 .cal-title::after{content:'▾';font-size:13px;color:var(--tx3)}
@@ -182,6 +184,7 @@ button:focus-visible,.btn:focus-visible,.btn-sm:focus-visible,.nav-tab:focus-vis
   .nav-tab:not(.active):hover{color:var(--tx2)}
   .nav-tab.active:hover{color:var(--acc)}
   .cal-nav-btn:hover{background:var(--s2)}
+  .cal-nav-btn.glass:hover{background:var(--glass-lq);filter:none}
   .cal-title:hover{color:inherit}
   .cal-month-opt:hover{background:transparent}
   .btn-sm:hover{border-color:var(--bdr2);color:var(--tx2)}
@@ -229,6 +232,7 @@ button:focus-visible,.btn:focus-visible,.btn-sm:focus-visible,.nav-tab:focus-vis
 }
 @media (prefers-reduced-transparency: reduce){
   .tabbar{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--s1)}
+  .cal-nav-btn.glass{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--s2)}
   .modal{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--s1)}
 }
 @media (prefers-contrast: more){
@@ -278,12 +282,12 @@ button:focus-visible,.btn:focus-visible,.btn-sm:focus-visible,.nav-tab:focus-vis
       </div>
       <div id="empInfo" style="display:none">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-          <button class="cal-nav-btn" onclick="homeMove(-1)" aria-label="前一天"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 6 9 12l5.5 6"/></svg></button>
+          <button class="cal-nav-btn glass" onclick="homeMove(-1)" aria-label="前一天"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 6 9 12l5.5 6"/></svg></button>
           <div style="text-align:center">
             <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em" id="homeLabel">今日 ／ 明日</div>
             <div style="font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px" id="todayDisp">—</div>
           </div>
-          <button class="cal-nav-btn" onclick="homeMove(1)" aria-label="後一天"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 5.5 6-5.5 6"/></svg></button>
+          <button class="cal-nav-btn glass" onclick="homeMove(1)" aria-label="後一天"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 5.5 6-5.5 6"/></svg></button>
         </div>
         <div class="day-grid" id="dayCards"></div>
       </div>
