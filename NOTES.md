@@ -122,16 +122,25 @@ monthCache['YYYY-MM'][day]  →  codeToInfo(code)
 
 ### 月曆今日標示
 
-今日格子的日期數字以橘色實心圓(`--acc`)顯示,不用外框:
+今日格子的日期數字以橘色實心圓(`--acc`)顯示,不用外框(`.cal-cell.today .cc-day`,白字 30px 圓)。
 
-```css
-.cal-cell.today .cc-day {
-  display: inline-flex; align-items: center; justify-content: center;
-  background: var(--acc); color: #0a0c10;
-  border-radius: 50%; width: 22px; height: 22px;
-  font-size: 11px; margin-bottom: 2px;
-}
-```
+### 月份下拉
+
+以**目前檢視月**為基準列「前 1～後 3 個月」(不是以真實今天為基準),目前月 `.cur` 橘色粗體;選項 `white-space:nowrap` 防兩位數月份折行。
+
+## Apple Design 介面(2026-07-19 從 railwayshift 移植)
+
+與 railwayshift 同一套設計語言,規範細節見 railwayshift 的 `docs/ui.md`,這裡記 railwayroster 要注意的:
+
+- **色彩**:iOS 系統色 + `prefers-color-scheme` 深淺雙主題,全走 `:root` 變數;新增顏色兩個主題都要定義,不要寫死色碼
+- **字體**:系統字體(已移除 Google Fonts CDN),數字用 `font-variant-numeric:tabular-nums`
+- **底部液態玻璃 Tab Bar**(`.tabbar` + `.tab-lens` 透鏡):**手動切分頁(不走 `showPage()`)必須同步 `_pageIdx`、`_slideIn()`、`requestAnimationFrame(_moveTabLens)`**,否則透鏡停在舊位置(本專案 `goToDate` 有走 `showPage`,目前安全)
+- **hover reset**:有狀態 class 的元素要用 `:not(.active)` 排除,否則 reset 蓋掉 active 色(`.nav-tab` 的寫法照抄)
+- **手機 Modal = 彈簧底部面板**:新 modal 一律走 `setModal()`/`closeM()`,不要自己動 overlay 的 `open` class;管理員驗證中(`_adminAuthPending`)拖曳把手只會彈回、不會關閉
+- **滑動手勢**:首頁/月曆左右滑(`_addSwipe`),有 `employeeId` 才觸發;月曆滑到未匯入月份由 `calMove` 原本的 toast+回退邏輯處理
+- **`body{overflow-x:hidden}` 不可移除**:轉場 `translateX` 需要,否則桌面切頁時水平捲軸閃動
+- **頂欄**:品牌＋員工膠囊(`#empChip`,點擊 confirm 後 `changeEmp()`;原首頁「目前查詢」卡片已移除,`#empDisplay` 現在在膠囊內)＋時鐘＋連線燈
+- **admin 本地預覽旁路**:`_verifyToken` 在 `localhost`/`127.0.0.1` 直接放行(Edge Function CORS 白名單只允許正式網域,本地驗證必失敗);僅供看 UI,實際寫入仍被 CORS 擋。**iPhone 用區網 IP 預覽時旁路不生效**
 
 ## 上傳流程(doUpload)
 

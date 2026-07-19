@@ -2,84 +2,121 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
 <title>彰化機務段輪班查詢</title>
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <style>
 :root{
-  --bg:#0a0c10;--s1:#111318;--s2:#181c24;--s3:#1e2330;
-  --bdr:rgba(255,255,255,0.07);--bdr2:rgba(255,255,255,0.13);
-  --acc:#f59e0b;--acc2:#fbbf24;--acc-d:rgba(245,158,11,0.12);
-  --tx:#e8eaf0;--tx2:#9ca3b0;--tx3:#5a6070;
-  --g:#10b981;--g-d:rgba(16,185,129,0.12);
-  --r:#ef4444;--r-d:rgba(239,68,68,0.12);
-  --b:#3b82f6;--b-d:rgba(59,130,246,0.12);
-  --p:#a855f7;--p-d:rgba(168,85,247,0.12);
-  --rad:12px;--rad-s:8px;
+  --bg:#000000;--s1:#1C1C1E;--s2:#2C2C2E;--s3:#3A3A3C;
+  --bdr:rgba(255,255,255,0.08);--bdr2:rgba(255,255,255,0.14);
+  --acc:#FF9F0A;--acc2:#FFB340;--acc-d:rgba(255,159,10,0.16);
+  --tx:#F2F2F7;--tx2:#98989F;--tx3:#6E6E73;
+  --g:#30D158;--g-d:rgba(48,209,88,0.15);
+  --r:#FF453A;--r-d:rgba(255,69,58,0.15);
+  --b:#0A84FF;--b-d:rgba(10,132,255,0.15);
+  --p:#BF5AF2;--p-d:rgba(191,90,242,0.15);
+  --cyan:#64D2FF;
+  --rad:18px;--rad-s:10px;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  --glass:rgba(28,28,30,.72);--glass-edge:rgba(255,255,255,.12);
+  --glass-lq:rgba(28,28,30,.5);
+  --dim:rgba(0,0,0,.55);
+}
+@media (prefers-color-scheme: light){
+  :root{
+    --bg:#F2F2F7;--s1:#FFFFFF;--s2:#F2F2F7;--s3:#E5E5EA;
+    --bdr:rgba(60,60,67,0.12);--bdr2:rgba(60,60,67,0.2);
+    --acc:#FF9500;--acc2:#FFB340;--acc-d:rgba(255,149,0,0.14);
+    --tx:#1C1C1E;--tx2:#6C6C70;--tx3:#8E8E93;
+    --g:#34C759;--g-d:rgba(52,199,89,0.14);
+    --r:#FF3B30;--r-d:rgba(255,59,48,0.13);
+    --b:#007AFF;--b-d:rgba(0,122,255,0.12);
+    --p:#AF52DE;--p-d:rgba(175,82,222,0.13);
+    --cyan:#32ADE6;
+    --shadow:0 1px 2px rgba(0,0,0,.05),0 8px 24px rgba(0,0,0,.07);
+    --glass:rgba(249,249,249,.75);--glass-edge:rgba(255,255,255,.6);
+    --glass-lq:rgba(255,255,255,.55);
+    --dim:rgba(0,0,0,.35);
+  }
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--tx);font-family:'Noto Sans TC',sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh}
-.topbar{background:var(--s1);border-bottom:1px solid var(--bdr);padding:0 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;height:54px}
-.brand{display:flex;align-items:center;gap:8px;font-weight:900;font-size:15px;color:var(--acc);white-space:nowrap;min-width:0}
+body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','PingFang TC','Noto Sans TC',system-ui,sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;-webkit-tap-highlight-color:transparent;overflow-x:hidden}
+.topbar{background:var(--glass);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid var(--bdr);padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:100;height:54px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:15px;letter-spacing:-.01em;color:var(--acc);white-space:nowrap;min-width:0}
 .brand span{overflow:hidden;text-overflow:ellipsis;min-width:0}
 .brand-short{display:none}
-.nav-tabs{display:flex;gap:1px;flex:1;overflow-x:auto;min-width:88px}
-.nav-tab{background:none;border:none;cursor:pointer;color:var(--tx3);padding:9px 12px;font-size:13px;font-family:inherit;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:5px;flex-shrink:0;min-height:40px}
-.nav-tab:hover{color:var(--tx2)}
-.nav-tab.active{color:var(--acc);border-bottom-color:var(--acc)}
-.status-wrap{margin-left:auto;display:flex;align-items:center;gap:6px;flex-shrink:0}
+.tabbar{position:fixed;left:50%;bottom:max(8px,calc(env(safe-area-inset-bottom) - 16px));transform:translateX(-50%);z-index:150;display:flex;gap:3px;padding:5px;border-radius:999px;background:var(--glass-lq);-webkit-backdrop-filter:blur(28px) saturate(200%);backdrop-filter:blur(28px) saturate(200%);border:1px solid var(--glass-edge);box-shadow:0 12px 40px rgba(0,0,0,.32),0 1px 2px rgba(0,0,0,.1),inset 0 1px 0 rgba(255,255,255,.18),inset 0 -1px 1px rgba(255,255,255,.05);max-width:calc(100vw - 20px);overflow-x:auto;scrollbar-width:none}
+.tabbar::-webkit-scrollbar{display:none}
+.tab-lens{position:absolute;top:5px;bottom:5px;left:0;width:0;border-radius:999px;background:var(--acc-d);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),inset 0 -1px 1px rgba(255,255,255,.06),0 2px 10px rgba(0,0,0,.15);pointer-events:none;transition:transform .5s cubic-bezier(.3,1.35,.35,1),width .5s cubic-bezier(.3,1.35,.35,1)}
+.nav-tab{position:relative;background:none;border:none;cursor:pointer;color:var(--tx2);padding:9px 14px;font-size:13px;font-weight:600;font-family:inherit;border-radius:999px;transition:transform .1s ease-out,color .15s;white-space:nowrap;display:flex;align-items:center;gap:6px;flex-shrink:0;min-height:44px}
+.nav-tab:hover{color:var(--tx)}
+.nav-tab.active{color:var(--acc)}
+.nav-tab svg{width:19px;height:19px;flex-shrink:0}
+.status-wrap{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.clock{font-size:14px;font-weight:600;color:var(--tx2);font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.emp-chip{display:flex;align-items:center;gap:5px;background:var(--s2);border:none;border-radius:999px;color:var(--tx);font-family:inherit;font-size:13px;font-weight:600;padding:8px 14px;min-height:40px;cursor:pointer;min-width:0;max-width:45vw;transition:transform .1s ease-out,background .15s}
+.emp-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.emp-chip:active{transform:scale(.96)}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--r);box-shadow:0 0 5px var(--r);transition:.3s}
 .dot.on{background:var(--g);box-shadow:0 0 5px var(--g)}
-.main{padding:20px 16px;max-width:960px;margin:0 auto;width:100%}
+.main{padding:20px 16px calc(96px + env(safe-area-inset-bottom));max-width:960px;margin:0 auto;width:100%}
 .page{display:none}.page.active{display:block}
+.slide-l{animation:pageSlideL .34s cubic-bezier(.32,.72,.28,1)}
+.slide-r{animation:pageSlideR .34s cubic-bezier(.32,.72,.28,1)}
+@keyframes pageSlideL{from{opacity:0;transform:translateX(32px)}to{opacity:1;transform:none}}
+@keyframes pageSlideR{from{opacity:0;transform:translateX(-32px)}to{opacity:1;transform:none}}
 .day-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media(max-width:580px){.day-grid{grid-template-columns:1fr}}
-.day-card{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--rad);overflow:hidden}
-.day-card.is-today{border-color:rgba(245,158,11,.25)}
+.day-card{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--rad);overflow:hidden;box-shadow:var(--shadow)}
+.day-card.is-today{border-color:rgba(255,159,10,.35)}
 .dc-head{padding:14px 16px 10px;border-bottom:1px solid var(--bdr);display:flex;justify-content:space-between;align-items:flex-start}
 .dc-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--tx3)}
-.dc-date{font-size:14px;font-weight:700;margin-top:3px;font-family:'DM Mono',monospace}
+.dc-date{font-size:14px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums}
 .dc-wd{font-size:11px;color:var(--tx3);margin-top:1px}
-.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:-.005em}
 .badge-work{background:var(--acc-d);color:var(--acc)}
 .badge-off{background:var(--r-d);color:var(--r)}
 .badge-rest{background:var(--g-d);color:var(--g)}
 .badge-leave{background:var(--b-d);color:var(--b)}
 .badge-unknown{background:var(--s3);color:var(--tx3)}
 .dc-body{padding:14px 16px}
-.shift-num{font-size:40px;font-weight:900;color:var(--acc);font-family:'DM Mono',monospace;letter-spacing:-.02em;line-height:1;margin-bottom:6px}
+.shift-num{font-size:42px;font-weight:800;color:var(--acc);font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1;margin-bottom:6px}
 .s-note{display:inline-block;font-size:11px;color:var(--tx3);background:var(--s3);padding:2px 8px;border-radius:4px;margin-bottom:10px}
 .shift-img{width:100%;border-radius:var(--rad-s);margin-top:8px;border:1px solid var(--bdr);display:block}
 .no-work{padding:24px 16px;text-align:center}
 .no-work-icon{font-size:32px;margin-bottom:8px}
 .no-work-label{font-size:14px;color:var(--tx2);font-weight:500}
-.cal-nav{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:18px}
-.cal-nav-btn{background:var(--s2);border:1px solid var(--bdr2);color:var(--tx);width:34px;height:34px;border-radius:var(--rad-s);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .15s}
-.cal-nav-btn:hover{border-color:var(--acc);color:var(--acc)}
+.cal-card{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--rad);padding:16px 12px 14px;box-shadow:var(--shadow);margin-bottom:14px}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;padding:0 6px}
+.cal-nav-btn{background:var(--s2);border:none;color:var(--acc);width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:transform .1s ease-out,background .15s}
+.cal-nav-btn:hover{background:var(--s3)}
+.cal-nav-btn:active{transform:scale(.92)}
 .cal-title{font-size:20px;font-weight:900;cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px}
 .cal-title:hover{color:var(--acc)}
 .cal-title::after{content:'▾';font-size:13px;color:var(--tx3)}
 .cal-nav-wrap{position:relative;display:flex;flex-direction:column;align-items:center}
 .cal-month-drop{position:absolute;top:calc(100% + 6px);background:var(--s2);border:1px solid var(--bdr2);border-radius:var(--rad-s);box-shadow:0 4px 16px rgba(0,0,0,.18);z-index:50;min-width:130px;overflow:hidden;display:none}
 .cal-month-drop.open{display:block}
-.cal-month-opt{padding:11px 18px;font-size:15px;cursor:pointer;transition:background .1s}
+.cal-month-opt{padding:11px 18px;font-size:15px;cursor:pointer;transition:background .1s;white-space:nowrap;font-variant-numeric:tabular-nums}
+.cal-month-opt.cur{color:var(--acc);font-weight:700}
 .cal-month-opt:hover{background:var(--s3)}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
-.cal-hd{text-align:center;font-size:11px;color:var(--tx3);padding:7px 0;font-weight:700}
-.cal-cell{background:var(--s1);border:1px solid var(--bdr);border-radius:7px;padding:7px 5px;min-height:72px;position:relative;border-left-width:3px;border-left-color:var(--bdr)}
-.cal-cell.empty{background:none;border-color:transparent}
-.cal-cell.today .cc-day{display:inline-flex;align-items:center;justify-content:center;background:var(--acc);color:#0a0c10;border-radius:50%;width:22px;height:22px;font-size:11px;margin-bottom:2px}
-.cal-cell.work{border-left-color:var(--acc)}
-.cal-cell.off{border-left-color:var(--r)}
-.cal-cell.rest{border-left-color:var(--g)}
-.cal-cell.leave{border-left-color:var(--b)}
-.cc-day{font-size:12px;font-weight:700;margin-bottom:2px}
-.cc-type{font-size:9px;color:var(--tx3)}
-.cc-shift{font-size:11px;color:var(--acc);font-family:'DM Mono',monospace;font-weight:700}
+.cal-hd{text-align:center;font-size:12px;color:var(--tx3);padding:7px 0;font-weight:600}
+.cal-cell{background:none;border:none;border-radius:10px;padding:8px 2px;min-height:0;position:relative;display:flex;flex-direction:column;align-items:center;gap:3px}
+@media(min-width:581px){.cal-cell{aspect-ratio:1/1.05;justify-content:flex-start;padding-top:14px}}
+.cal-cell.empty{cursor:default}
+.cal-cell.empty .cc-day{color:var(--tx3);opacity:.55}
+.cc-day{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:50%}
+.cal-cell.today .cc-day{background:var(--acc);color:#fff;font-weight:700}
+.cc-type{font-size:12px;font-weight:600;color:var(--tx3)}
+.cal-cell.off .cc-type{color:var(--r)}
+.cal-cell.rest .cc-type{color:var(--g)}
+.cal-cell.leave .cc-type{color:var(--b)}
+.cc-shift{font-size:12px;color:var(--acc);font-variant-numeric:tabular-nums;font-weight:700}
 .cal-legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px;justify-content:center}
 .leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tx3)}
 .leg-dot{width:8px;height:8px;border-radius:50%}
@@ -91,23 +128,30 @@ body{background:var(--bg);color:var(--tx);font-family:'Noto Sans TC',sans-serif;
 .shifts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:9px}
 .sc{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--rad-s);padding:13px;border-left-width:3px;border-left-color:var(--acc)}
 .sc.variant{border-left-color:var(--p)}
-.sc-name{font-size:16px;font-weight:900;color:var(--acc);font-family:'DM Mono',monospace;margin-bottom:3px;display:flex;align-items:center;gap:5px}
-.var-tag{font-size:9px;font-weight:700;background:var(--p-d);color:var(--p);padding:2px 5px;border-radius:3px;font-family:'Noto Sans TC',sans-serif}
+.sc-name{font-size:16px;font-weight:900;color:var(--acc);font-variant-numeric:tabular-nums;margin-bottom:3px;display:flex;align-items:center;gap:5px}
+.var-tag{font-size:9px;font-weight:700;background:var(--p-d);color:var(--p);padding:2px 5px;border-radius:3px}
 .sc-note{font-size:11px;color:var(--tx3);margin-bottom:8px}
 .sc-times{display:grid;grid-template-columns:1fr 1fr;gap:5px;font-size:11px}
 .sct-label{color:var(--tx3)}
-.sct-val{color:var(--tx);font-family:'DM Mono',monospace;font-weight:600}
+.sct-val{color:var(--tx);font-variant-numeric:tabular-nums;font-weight:600}
 .on-badge{display:inline-block;font-size:10px;background:var(--p-d);color:var(--p);padding:2px 6px;border-radius:4px;margin-top:5px}
 .sc-foot{display:flex;gap:5px;margin-top:9px}
 .btn-sm{flex:1;background:none;border:1px solid var(--bdr2);color:var(--tx2);padding:10px 8px;border-radius:var(--rad-s);cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:4px;min-height:40px}
 .btn-sm:hover{border-color:var(--acc);color:var(--acc)}
 .btn-sm.warn{border-color:rgba(239,68,68,.3);color:var(--r)}
 .btn-sm.warn:hover{background:var(--r-d)}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay{position:fixed;inset:0;background:var(--dim);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .25s}
 .overlay.open{opacity:1;pointer-events:all}
-.modal{background:var(--s1);border:1px solid var(--bdr2);border-radius:var(--rad);padding:22px;width:100%;max-width:440px;box-shadow:0 16px 48px rgba(0,0,0,.6);transform:translateY(10px);transition:transform .2s;max-height:92vh;overflow-y:auto}
+.modal{background:var(--s1);border:1px solid var(--bdr2);border-radius:var(--rad);padding:22px;width:100%;max-width:440px;box-shadow:0 16px 48px rgba(0,0,0,.6);transform:translateY(10px);transition:transform .2s;max-height:92vh;overflow-y:auto;overscroll-behavior:contain}
 .overlay.open .modal{transform:translateY(0)}
 .modal-wide{max-width:620px}
+.modal-grab{display:none}
+@media(max-width:640px){
+  .overlay{align-items:flex-end;padding:0}
+  .modal,.modal-wide{max-width:none;border:none;border-top:1px solid var(--glass-edge);border-radius:22px 22px 0 0;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);padding:8px 20px calc(20px + env(safe-area-inset-bottom));max-height:92vh;transition:none;transform:translateY(105%);will-change:transform}
+  .overlay.open .modal{transform:translateY(105%)}
+  .modal-grab{display:block;width:38px;height:5px;border-radius:999px;background:var(--tx3);opacity:.55;margin:6px auto 14px;cursor:grab;touch-action:none}
+}
 .modal-title{font-size:15px;font-weight:700;margin-bottom:18px;color:var(--acc)}
 .modal-actions{display:flex;gap:9px;justify-content:flex-end;margin-top:18px}
 .fg{margin-bottom:14px}
@@ -116,12 +160,15 @@ body{background:var(--bg);color:var(--tx);font-family:'Noto Sans TC',sans-serif;
 .fi:focus,.fs:focus{outline:none;border-color:var(--acc)}
 .f2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .btn{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:var(--rad-s);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;border:1px solid transparent;transition:all .15s;min-height:40px}
-.btn-primary{background:var(--acc);color:#0a0c10;border-color:var(--acc)}
+.btn-primary{background:var(--acc);color:#fff;border-color:var(--acc)}
 .btn-primary:hover{background:var(--acc2)}
 .btn-secondary{background:var(--s2);color:var(--tx);border-color:var(--bdr2)}
 .btn-secondary:hover{border-color:var(--tx2)}
 .btn-ghost{background:none;color:var(--tx2);border-color:var(--bdr2)}
 .btn-ghost:hover{border-color:var(--tx2);color:var(--tx)}
+
+/* 按壓即回饋：pointer-down 瞬間縮小（Apple design：react on pointer-down） */
+.btn:active,.btn-sm:active,.nav-tab:active,.cal-nav-btn:active,.filter-btn:active{transform:scale(.96)}
 
 /* 鍵盤焦點外框（只在鍵盤導航時出現） */
 button:focus-visible,.btn:focus-visible,.btn-sm:focus-visible,.nav-tab:focus-visible,.filter-btn:focus-visible,a:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:var(--rad-s)}
@@ -129,8 +176,9 @@ button:focus-visible,.btn:focus-visible,.btn-sm:focus-visible,.nav-tab:focus-vis
 
 /* 觸控裝置：取消 hover 視覺殘留（手機/平板點完按鈕後狀態不會卡住） */
 @media (hover: none) {
-  .nav-tab:hover{color:var(--tx3)}
-  .cal-nav-btn:hover{border-color:var(--bdr2);color:var(--tx)}
+  .nav-tab:not(.active):hover{color:var(--tx2)}
+  .nav-tab.active:hover{color:var(--acc)}
+  .cal-nav-btn:hover{background:var(--s2)}
   .cal-title:hover{color:inherit}
   .cal-month-opt:hover{background:transparent}
   .btn-sm:hover{border-color:var(--bdr2);color:var(--tx2)}
@@ -146,7 +194,7 @@ button:focus-visible,.btn:focus-visible,.btn-sm:focus-visible,.nav-tab:focus-vis
 .sep{height:1px;background:var(--bdr);margin:14px 0}
 .empty-state{text-align:center;padding:40px 16px;color:var(--tx3);border:1px dashed var(--bdr2);border-radius:var(--rad)}
 .empty-icon{font-size:36px;margin-bottom:10px}
-.toast-wrap{position:fixed;bottom:18px;right:18px;z-index:999;display:flex;flex-direction:column;gap:7px}
+.toast-wrap{position:fixed;bottom:calc(88px + env(safe-area-inset-bottom));right:18px;z-index:999;display:flex;flex-direction:column;gap:7px}
 .toast{background:var(--s1);border:1px solid var(--bdr2);color:var(--tx);padding:10px 14px;border-radius:var(--rad-s);font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.5);animation:tin .2s ease;display:flex;align-items:center;gap:7px}
 .toast.ok{border-left:3px solid var(--g)}
 .toast.err{border-left:3px solid var(--r)}
@@ -162,12 +210,26 @@ button:focus-visible,.btn:focus-visible,.btn-sm:focus-visible,.nav-tab:focus-vis
 ::-webkit-scrollbar-track{background:var(--s1)}
 ::-webkit-scrollbar-thumb{background:var(--s3);border-radius:3px}
 @media(max-width:580px){
-  .main{padding:14px 11px}
+  .main{padding:14px 11px calc(92px + env(safe-area-inset-bottom))}
   .cal-cell{min-height:58px}
   .f2{grid-template-columns:1fr}
-  .nav-tab .nav-lbl{display:none}
+  .nav-tab{padding:9px 12px}
+  .nav-tab:not(.active) .nav-lbl{display:none}
   .brand-full{display:none}
   .brand-short{display:inline}
+}
+
+/* 輔助設定（Apple design：respect user settings） */
+@media (prefers-reduced-motion: reduce){
+  *{transition-duration:.01ms!important;animation-duration:.01ms!important}
+  .spinner{animation-duration:.8s!important}
+}
+@media (prefers-reduced-transparency: reduce){
+  .topbar,.tabbar{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--s1)}
+  .modal{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--s1)}
+}
+@media (prefers-contrast: more){
+  .day-card,.card,.cal-card,.tabbar,.modal{border:1px solid var(--tx2)}
 }
 </style>
 </head>
@@ -181,15 +243,19 @@ button:focus-visible,.btn:focus-visible,.btn-sm:focus-visible,.nav-tab:focus-vis
 <div id="app" class="app-hidden" style="flex-direction:column;min-height:100vh">
   <div class="topbar">
     <div class="brand">🚂 <span class="brand-full">彰化機務段輪班查詢</span><span class="brand-short">輪班查詢</span></div>
-    <div class="nav-tabs">
-      <button class="nav-tab active" onclick="showPage('home')">⊙ <span class="nav-lbl">首頁</span></button>
-      <button class="nav-tab" onclick="showPage('calendar')">▦ <span class="nav-lbl">月曆</span></button>
-      <button class="nav-tab admin-only" onclick="showPage('admin')">⚙ <span class="nav-lbl">管理員</span></button>
-    </div>
+    <button class="emp-chip" id="empChip" style="display:none" onclick="if(confirm('更換員工編號？'))changeEmp()" aria-label="更換員工編號">👤 <span id="empDisplay">—</span></button>
     <div class="status-wrap">
+      <div class="clock" id="topClock" aria-label="現在時刻"></div>
       <div class="dot" id="statusDot" role="status" aria-label="連線中"></div>
     </div>
   </div>
+
+  <nav class="tabbar" id="tabbar">
+    <div class="tab-lens" id="tabLens"></div>
+    <button class="nav-tab active" onclick="showPage('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="nav-lbl">首頁</span></button>
+    <button class="nav-tab" onclick="showPage('calendar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg><span class="nav-lbl">月曆</span></button>
+    <button class="nav-tab admin-only" onclick="showPage('admin')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.2 2.2M16.9 16.9l2.2 2.2M2 12h3M19 12h3M4.9 19.1l2.2-2.2M16.9 7.1l2.2-2.2"/></svg><span class="nav-lbl">管理員</span></button>
+  </nav>
 
   <div class="main">
 
@@ -208,20 +274,13 @@ button:focus-visible,.btn:focus-visible,.btn-sm:focus-visible,.nav-tab:focus-vis
         </div>
       </div>
       <div id="empInfo" style="display:none">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;background:var(--s2);border-radius:var(--rad);padding:12px 16px;border:1px solid var(--bdr)">
-          <div style="flex:1">
-            <div style="font-size:10px;color:var(--tx3);margin-bottom:2px">目前查詢</div>
-            <div style="font-weight:700;font-size:14px" id="empDisplay">—</div>
-          </div>
-          <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px" onclick="changeEmp()">更換</button>
-        </div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-          <button class="cal-nav-btn" onclick="homeMove(-1)" aria-label="前一天">‹</button>
+          <button class="cal-nav-btn" onclick="homeMove(-1)" aria-label="前一天"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 6 9 12l5.5 6"/></svg></button>
           <div style="text-align:center">
             <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em" id="homeLabel">今日 ／ 明日</div>
-            <div style="font-size:13px;font-weight:700;font-family:'DM Mono',monospace;margin-top:2px" id="todayDisp">—</div>
+            <div style="font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px" id="todayDisp">—</div>
           </div>
-          <button class="cal-nav-btn" onclick="homeMove(1)" aria-label="後一天">›</button>
+          <button class="cal-nav-btn" onclick="homeMove(1)" aria-label="後一天"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 5.5 6-5.5 6"/></svg></button>
         </div>
         <div class="day-grid" id="dayCards"></div>
       </div>
@@ -237,15 +296,17 @@ button:focus-visible,.btn:focus-visible,.btn-sm:focus-visible,.nav-tab:focus-vis
         </div>
       </div>
       <div id="calContent">
-        <div class="cal-nav">
-          <button class="cal-nav-btn" onclick="calMove(-1)" aria-label="上一個月">‹</button>
-          <div class="cal-nav-wrap">
-            <div class="cal-title" id="calTitle" onclick="toggleCalDrop()"></div>
-            <div class="cal-month-drop" id="calMonthDrop"></div>
+        <div class="cal-card">
+          <div class="cal-nav">
+            <button class="cal-nav-btn" onclick="calMove(-1)" aria-label="上一個月"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 6 9 12l5.5 6"/></svg></button>
+            <div class="cal-nav-wrap">
+              <div class="cal-title" id="calTitle" onclick="toggleCalDrop()"></div>
+              <div class="cal-month-drop" id="calMonthDrop"></div>
+            </div>
+            <button class="cal-nav-btn" onclick="calMove(1)" aria-label="下一個月"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 6 5.5 6-5.5 6"/></svg></button>
           </div>
-          <button class="cal-nav-btn" onclick="calMove(1)" aria-label="下一個月">›</button>
+          <div class="cal-grid" id="calGrid"></div>
         </div>
-        <div class="cal-grid" id="calGrid"></div>
         <div class="cal-legend">
           <div class="leg-item"><div class="leg-dot" style="background:var(--acc)"></div>工作班</div>
           <div class="leg-item"><div class="leg-dot" style="background:var(--r)"></div>例假</div>
@@ -302,6 +363,7 @@ button:focus-visible,.btn:focus-visible,.btn-sm:focus-visible,.nav-tab:focus-vis
 <div class="toast-wrap" id="toastWrap"></div>
 <div class="overlay" id="overlay" onclick="overlayClick(event)">
   <div class="modal" id="modalBox">
+    <div class="modal-grab" id="modalGrab" aria-hidden="true"></div>
     <div class="modal-title" id="modalTitle"></div>
     <div id="modalBody"></div>
     <div class="modal-actions" id="modalActions"></div>
@@ -500,6 +562,8 @@ function updateEmpUI() {
   document.getElementById('empInfo').style.display   = hasEmp ? '' : 'none';
   const el = document.getElementById('empDisplay');
   if (el) el.textContent = employeeName ? `${employeeName}（${employeeId}）` : `員工編號：${employeeId}`;
+  const chip = document.getElementById('empChip');
+  if (chip) chip.style.display = hasEmp ? '' : 'none';
   const calNoEmp  = document.getElementById('calNoEmp');
   const calContent = document.getElementById('calContent');
   if (calNoEmp)  calNoEmp.style.display  = hasEmp ? 'none' : '';
@@ -523,7 +587,7 @@ function renderHome() {
     buildDayCard(d1, isBase?'今日':(homeOffset===1?'明日':d1), d1===today) +
     buildDayCard(d2, isBase?'明日':(homeOffset===1?'後日':d2), d2===today);
 }
-function homeMove(dir) { homeOffset += dir; renderHome(); }
+function homeMove(dir) { homeOffset += dir; renderHome(); _slideIn(document.getElementById('dayCards'), dir); }
 
 function buildDayCard(ds, label, isToday) {
   const info = getDayInfo(ds);
@@ -541,9 +605,9 @@ function buildDayCard(ds, label, isToday) {
         <div class="shift-num" style="margin-bottom:0;line-height:1">${escapeHtml(name)}</div>
         <div style="text-align:right;flex-shrink:0">
           ${startT ? `<div style="font-size:10px;color:var(--tx3);letter-spacing:.08em;margin-bottom:2px">⏱ 上班時間</div>
-          <div style="font-size:30px;font-weight:900;font-family:'DM Mono',monospace;color:#fff;line-height:1">${startT}</div>` : ''}
+          <div style="font-size:30px;font-weight:900;font-variant-numeric:tabular-nums;color:#fff;line-height:1">${startT}</div>` : ''}
           ${endT ? `<div style="font-size:10px;color:var(--tx3);letter-spacing:.08em;margin-top:6px;margin-bottom:2px">🏁 下班時間</div>
-          <div style="font-size:22px;font-weight:700;font-family:'DM Mono',monospace;color:var(--tx2);line-height:1">${endT}</div>` : ''}
+          <div style="font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--tx2);line-height:1">${endT}</div>` : ''}
         </div>
       </div>
       ${note ? `<div class="s-note" style="margin-bottom:10px">📋 ${escapeHtml(note)}</div>` : ''}
@@ -571,7 +635,7 @@ function buildDayCard(ds, label, isToday) {
       body = `<div class="no-work">${note ? `<div style="font-size:12px;color:var(--tx3)">📋 ${note}</div>` : ''}</div>`;
     }
   }
-  return `<div class="day-card ${isToday?'is-today':''}" ${hasOverride?'style="border-color:rgba(245,158,11,0.5)"':''}>
+  return `<div class="day-card ${isToday?'is-today':''}" ${hasOverride?'style="border-color:rgba(255,159,10,0.5)"':''}>
     <div class="dc-head">
       <div>
         <div class="dc-label">${label}</div>
@@ -590,11 +654,12 @@ function buildDayCard(ds, label, isToday) {
 // ── CALENDAR ─────────────────────────────────────
 const CAL_LABEL = { off:'例假', rest:'休班', leave:'特休' };
 function renderCal() {
-  document.getElementById('calTitle').textContent = `${calY} 年 ${calM} 月`;
+  document.getElementById('calTitle').textContent = `${calY}年${calM}月`;
   const days = daysInMonth(calY, calM), first = new Date(calY, calM-1, 1).getDay(), today = todayStr();
   const key = `${calY}-${p2(calM)}`;
   let h = ['日','一','二','三','四','五','六'].map(w => `<div class="cal-hd">${w}</div>`).join('');
-  for (let i = 0; i < first; i++) h += '<div class="cal-cell empty"></div>';
+  const prevDays = daysInMonth(calM===1?calY-1:calY, calM===1?12:calM-1);
+  for (let i = 0; i < first; i++) h += `<div class="cal-cell empty"><div class="cc-day">${prevDays-first+1+i}</div></div>`;
   for (let d = 1; d <= days; d++) {
     const ds = `${calY}-${p2(calM)}-${p2(d)}`;
     const info = getDayInfo(ds), sh = info.shiftId ? getShift(info.shiftId) : null;
@@ -623,6 +688,7 @@ async function calMove(dir) {
     return;
   }
   renderCal();
+  _slideIn(document.getElementById('calGrid'), dir);
 }
 function subscribeCalendar() {
   if (!employeeId) { toast('請先設定員工編號', 'err'); return; }
@@ -641,10 +707,11 @@ function subscribeCalendar() {
 function toggleCalDrop() {
   const drop = document.getElementById('calMonthDrop');
   if (drop.classList.contains('open')) { drop.classList.remove('open'); return; }
-  const now = new Date(), ty = now.getFullYear(), tm = now.getMonth()+1;
-  drop.innerHTML = [0,1,2,3].map(o => {
-    let y=ty, m=tm+o; if(m>12){m-=12;y++;} else if(m<1){m+=12;y--;}
-    return `<div class="cal-month-opt" onclick="jumpCalTo(${y},${m})">${y} 年 ${m} 月</div>`;
+  // 以目前檢視中的月份為基準：前 1 個月～後 3 個月
+  drop.innerHTML = [-1,0,1,2,3].map(o => {
+    let y=calY, m=calM+o; if(m>12){m-=12;y++;} else if(m<1){m+=12;y--;}
+    const cur = (y===calY && m===calM);
+    return `<div class="cal-month-opt${cur?' cur':''}" onclick="jumpCalTo(${y},${m})">${y}年${m}月</div>`;
   }).join('');
   drop.classList.add('open');
 }
@@ -1085,9 +1152,81 @@ function setModal(title, body, actions, wide) {
   document.getElementById('modalActions').innerHTML = actions.map(a =>
     `<button class="btn ${a.cls}" onclick="${a.fn}">${a.label}</button>`).join('');
   document.getElementById('overlay').classList.add('open');
+  _sheetOpen();
 }
 function overlayClick(e) { if (!_adminAuthPending && e.target===document.getElementById('overlay')) closeM(); }
-function closeM() { document.getElementById('overlay').classList.remove('open'); }
+function closeM() {
+  const ov = document.getElementById('overlay');
+  if (_isSheet() && ov.classList.contains('open')) { ov.classList.remove('open'); _sheetClose(0); }
+  else ov.classList.remove('open');
+}
+
+/* ── 手機底部彈簧面板（Apple design：spring damping 0.8 / response 0.3、
+      1:1 拖曳、橡皮筋阻尼、放手速度接手、可中途打斷） ── */
+const _SHEET_MQ = matchMedia('(max-width:640px)');
+const _REDUCE_MOTION = matchMedia('(prefers-reduced-motion: reduce)');
+function _isSheet() { return _SHEET_MQ.matches && !_REDUCE_MOTION.matches; }
+let _shRaf = null, _shY = 0;
+function _shBox() { return document.getElementById('modalBox'); }
+function _shH() { return _shBox().offsetHeight + 60; }
+function _shApply() { _shBox().style.transform = `translateY(${_shY}px)`; }
+function _shSpring(target, v0, done) {
+  cancelAnimationFrame(_shRaf);
+  const zeta = 0.8, omega = 2 * Math.PI / 0.3;
+  let x = _shY, v = v0 || 0, last = performance.now();
+  function step(now) {
+    const dt = Math.min(.032, (now - last) / 1000); last = now;
+    const a = -omega * omega * (x - target) - 2 * zeta * omega * v;
+    v += a * dt; x += v * dt;
+    _shY = x; _shApply();
+    if (Math.abs(x - target) < .3 && Math.abs(v) < .3) { _shY = target; _shApply(); done && done(); return; }
+    _shRaf = requestAnimationFrame(step);
+  }
+  _shRaf = requestAnimationFrame(step);
+}
+function _sheetOpen() {
+  const m = _shBox();
+  if (_SHEET_MQ.matches) {
+    if (_REDUCE_MOTION.matches) { m.style.transform = 'translateY(0)'; return; }
+    cancelAnimationFrame(_shRaf);
+    _shY = _shH(); _shApply();
+    _shSpring(0, 0);
+  } else m.style.transform = '';
+}
+function _sheetClose(v0) {
+  const m = _shBox();
+  if (_REDUCE_MOTION.matches) { m.style.transform = ''; return; }
+  _shSpring(_shH(), v0 || 0, () => { m.style.transform = ''; });
+}
+(function() {
+  const grab = document.getElementById('modalGrab');
+  function _rubber(over, dim, c = 0.55) { return (over * dim * c) / (dim + c * Math.abs(over)); }
+  let drag = false, py0 = 0, y0 = 0, lastY = 0, lastT = 0, vel = 0;
+  grab.addEventListener('pointerdown', e => {
+    if (!_isSheet()) return;
+    drag = true; cancelAnimationFrame(_shRaf);
+    py0 = e.clientY; y0 = _shY; lastY = e.clientY; lastT = performance.now(); vel = 0;
+    grab.setPointerCapture(e.pointerId);
+  });
+  grab.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const now = performance.now(), dt = now - lastT;
+    if (dt > 0) { vel = (e.clientY - lastY) / dt * 1000; lastY = e.clientY; lastT = now; }
+    let ny = y0 + (e.clientY - py0);
+    if (ny < 0) ny = _rubber(ny, _shH());
+    _shY = ny; _shApply();
+  });
+  const end = () => {
+    if (!drag) return; drag = false;
+    if (_adminAuthPending) { _shSpring(0, vel / 60); return; }
+    const rate = 0.99;
+    const projected = _shY + (vel / 1000) * rate / (1 - rate) * 16;
+    if (projected > _shH() * 0.35) { document.getElementById('overlay').classList.remove('open'); _sheetClose(vel / 60); }
+    else _shSpring(0, vel / 60);
+  };
+  grab.addEventListener('pointerup', end);
+  grab.addEventListener('pointercancel', end);
+})();
 function toast(msg, type='ok') {
   const el = document.createElement('div');
   el.className = 'toast ' + type; el.textContent = msg;
@@ -1101,14 +1240,32 @@ function setStatus(on) {
     dot.setAttribute('aria-label', on ? '已連線' : '離線');
   }
 }
+let _pageIdx = 0;
+function _slideIn(el, dir) {
+  if (!el) return;
+  el.classList.remove('slide-l', 'slide-r');
+  void el.offsetWidth;
+  el.classList.add(dir > 0 ? 'slide-l' : 'slide-r');
+  el.addEventListener('animationend', () => el.classList.remove('slide-l', 'slide-r'), { once: true });
+}
+function _moveTabLens() {
+  const lens = document.getElementById('tabLens'), act = document.querySelector('.nav-tab.active');
+  if (!lens || !act || !act.offsetWidth) return;
+  lens.style.width = act.offsetWidth + 'px';
+  lens.style.transform = `translateX(${act.offsetLeft}px)`;
+}
 function showPage(name) {
   const alreadyOnHome = name === 'home' && document.getElementById('page-home')?.classList.contains('active');
   const alreadyOnCal  = name === 'calendar' && document.getElementById('page-calendar')?.classList.contains('active');
+  const alreadyActive = document.getElementById('page-' + name)?.classList.contains('active');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + name)?.classList.add('active');
   const idx = { home:0, calendar:1, admin:2 };
   document.querySelectorAll('.nav-tab')[idx[name]]?.classList.add('active');
+  const dir = idx[name] - _pageIdx; _pageIdx = idx[name];
+  if (dir !== 0 && !alreadyActive) _slideIn(document.getElementById('page-' + name), dir);
+  requestAnimationFrame(_moveTabLens);
   if (name === 'home') {
     if (alreadyOnHome) homeOffset = 0;
     renderHome();
@@ -1133,9 +1290,39 @@ function showApp() {
   app.style.display = 'flex';
   updateEmpUI();
   renderHome();
+  requestAnimationFrame(_moveTabLens);
 }
+
+/* ── 左右滑動手勢：首頁切日期、月曆切月份（60px 門檻、水平意圖判定） ── */
+function _addSwipe(el, fn) {
+  let sx = 0, sy = 0, t0 = 0, tracking = false;
+  el.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) return;
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY; t0 = Date.now(); tracking = true;
+  }, { passive: true });
+  el.addEventListener('touchend', e => {
+    if (!tracking) return; tracking = false;
+    const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 2 && Date.now() - t0 < 600) fn(dx < 0 ? 1 : -1);
+  }, { passive: true });
+}
+_addSwipe(document.getElementById('page-home'), d => { if (employeeId) homeMove(d); });
+_addSwipe(document.getElementById('page-calendar'), d => { if (employeeId) calMove(d); });
+window.addEventListener('resize', _moveTabLens);
+
+/* ── 頂欄即時時鐘（顯示到秒） ── */
+function _tickClock() {
+  const el = document.getElementById('topClock'); if (!el) return;
+  const n = new Date();
+  el.textContent = `${p2(n.getHours())}:${p2(n.getMinutes())}:${p2(n.getSeconds())}`;
+}
+_tickClock();
+setInterval(_tickClock, 1000);
 let _adminAuthPending = false;
 async function _verifyToken(token) {
+  // 本地預覽（localhost）直接放行：Edge Function CORS 白名單只允許正式網域，
+  // 本地驗證必失敗;此旁路僅供預覽 UI,實際寫入仍會被 CORS 擋下
+  if (['localhost','127.0.0.1'].includes(window.location.hostname)) return !!token;
   try {
     const res = await fetch(SUPABASE_URL + '/functions/v1/admin-write', {
       method: 'POST',
