@@ -124,6 +124,10 @@ monthCache['YYYY-MM'][day]  →  codeToInfo(code)
 
 今日格子的日期數字以橘色實心圓(`--acc`)顯示,不用外框(`.cal-cell.today .cc-day`,白字 30px 圓)。
 
+### 月曆臨時修改標示(2026-07-19 補)
+
+有 `tempOverrides[ds]` 的格子加 `.ex` class,日期數字染青藍(`--cyan`);今天同時有臨時修改維持橘底白字(`.cal-cell.today.ex .cc-day{color:#fff}`)。圖例列有青藍點「臨時修改」。做法與 railwayshift 一致。
+
 ### 月份下拉
 
 以**目前檢視月**為基準列「前 1～後 3 個月」(不是以真實今天為基準),目前月 `.cur` 橘色粗體;選項 `white-space:nowrap` 防兩位數月份折行。
@@ -139,7 +143,7 @@ monthCache['YYYY-MM'][day]  →  codeToInfo(code)
 - **手機 Modal = 彈簧底部面板**:新 modal 一律走 `setModal()`/`closeM()`,不要自己動 overlay 的 `open` class;管理員驗證中(`_adminAuthPending`)拖曳把手只會彈回、不會關閉
 - **滑動手勢**:首頁/月曆左右滑(`_addSwipe`),有 `employeeId` 才觸發;月曆滑到未匯入月份由 `calMove` 原本的 toast+回退邏輯處理
 - **`body{overflow-x:hidden}` 不可移除**:轉場 `translateX` 需要,否則桌面切頁時水平捲軸閃動
-- **頂欄**:品牌＋員工膠囊(`#empChip`,點擊 confirm 後 `changeEmp()`;原首頁「目前查詢」卡片已移除,`#empDisplay` 現在在膠囊內)＋時鐘＋連線燈
+- **頂欄**:品牌＋員工膠囊(`#empChip`,點擊 confirm 後 `changeEmp()`;原首頁「目前查詢」卡片已移除,`#empDisplay` 現在在膠囊內)＋時鐘＋連線燈;**未捲動時透明**,捲動 >8px 加 `.scrolled` 才浮現毛玻璃(消除狀態列黑-灰-黑割裂,不要改回常駐毛玻璃)
 - **admin 本地預覽旁路**:`_verifyToken` 在 `localhost`/`127.0.0.1` 直接放行(Edge Function CORS 白名單只允許正式網域,本地驗證必失敗);僅供看 UI,實際寫入仍被 CORS 擋。**iPhone 用區網 IP 預覽時旁路不生效**
 
 ## 上傳流程(doUpload)
