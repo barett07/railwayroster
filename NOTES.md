@@ -143,7 +143,7 @@ monthCache['YYYY-MM'][day]  →  codeToInfo(code)
 - **手機 Modal = 彈簧底部面板**:新 modal 一律走 `setModal()`/`closeM()`,不要自己動 overlay 的 `open` class;管理員驗證中(`_adminAuthPending`)拖曳把手只會彈回、不會關閉
 - **滑動手勢**:首頁/月曆左右滑(`_addSwipe`),有 `employeeId` 才觸發;月曆滑到未匯入月份由 `calMove` 原本的 toast+回退邏輯處理
 - **`body{overflow-x:hidden}` 不可移除**:轉場 `translateX` 需要,否則桌面切頁時水平捲軸閃動
-- **頂欄**:品牌＋員工膠囊(`#empChip`,點擊 confirm 後 `changeEmp()`;原首頁「目前查詢」卡片已移除,`#empDisplay` 現在在膠囊內)＋時鐘＋連線燈;**未捲動時透明**,捲動 >8px 加 `.scrolled` 才浮現毛玻璃(消除狀態列黑-灰-黑割裂,不要改回常駐毛玻璃)
+- **頂欄**:品牌＋員工膠囊(`#empChip`,點擊 confirm 後 `changeEmp()`;原首頁「目前查詢」卡片已移除,`#empDisplay` 現在在膠囊內)＋時鐘＋連線燈;**背景=不透明 `var(--bg)`,不可用毛玻璃/半透明**(iOS 26 會對狀態列區域自行取樣模糊,半透明頂欄會與系統效果不同步出現色差割裂),捲動 >8px 加 `.scrolled` 只浮現底部細分隔線
 - **admin 本地預覽旁路**:`_verifyToken` 在 `localhost`/`127.0.0.1` 直接放行(Edge Function CORS 白名單只允許正式網域,本地驗證必失敗);僅供看 UI,實際寫入仍被 CORS 擋。**iPhone 用區網 IP 預覽時旁路不生效**
 
 ## 上傳流程(doUpload)
